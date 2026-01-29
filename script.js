@@ -171,27 +171,30 @@ const verbGroups = {
   all: { verbs: verbs, name: "All (132 verbs)" }
 };
 
-// === СООБЩЕНИЯ И ДОСТИЖЕНИЯ ===
+// === СООБЩЕНИЯ ДЛЯ МОДАЛЬНЫХ ОКОН ===
 const allCorrectMessages = [
   "Wow, cool! Jump to the next training!",
   "Yay! The next training is calling you - go, go, go!",
   "Great! Run to the next one, superhero!",
-  "Nice! The next training is waiting - don't be lazy!",
-  "Hooray! Show the next training who's the boss!",
-  "Awesome! One more training and you'll be a star!",
-  "Good job! Next level - let's go!",
-  "Wow! The next training can't wait for you!"
+  "Nice! The next training is waiting - don’t be lazy!",
+  "Hooray! Show the next training who’s the boss!",
+  "Awesome! One more training and you’ll be a star!",
+  "Good job! Next level - let’s go!",
+  "Wow! The next training can’t wait for you!"
 ];
+
 const notAllCorrectMessages = [
-  "Almost there! Next time you'll be the champion!",
-  "Good try! You're getting better and better!",
-  "Nice work! A little more practice - and you'll smash it!",
-  "You're awesome anyway! Try again and win next time!",
-  "So close! One more go and you'll get it!",
-  "Don't worry! Even superheroes train a lot!",
+  "Almost there! Next time you’ll be the champion!",
+  "Good try! You’re getting better and better!",
+  "Nice work! A little more practice - and you’ll smash it!",
+  "You’re awesome anyway! Try again and win next time!",
+  "So close! One more go and you’ll get it!",
+  "Don’t worry! Even superheroes train a lot!",
   "Great effort! The top score is waiting for you!",
   "Keep going! Every try makes you stronger!"
 ];
+
+// === ДОСТИЖЕНИЯ ===
 const achievements = {
   novice: { name: "Novice", description: "Complete your first game.", icon: "🌟" },
   master_common1: { name: "Master Common 1", description: "100% correct in Common (part 1).", icon: "🥇" },
@@ -269,7 +272,7 @@ class VerbsTrainer {
       };
       this.showMainScreen();
     } catch (error) {
-      console.error("Error loading student data:", error);
+      console.error("Error loading student ", error);
       this.userData = {
         nickname: student.name,
         avatarUrl: student.avatar,
@@ -287,7 +290,7 @@ class VerbsTrainer {
     try {
       await database.ref('students/' + this.currentStudentId).set(this.userData);
     } catch (error) {
-      console.error("Error saving student data:", error);
+      console.error("Error saving student ", error);
     }
   }
 
@@ -450,7 +453,8 @@ class VerbsTrainer {
         }
       }
     } else {
-      this.showCompletionModal(false, true);
+      // ← ЭТО ГЛАВНОЕ ИЗМЕНЕНИЕ:
+      this.showCompletionModal(false, true); // сразу таблица результатов
     }
   }
 
@@ -477,32 +481,30 @@ class VerbsTrainer {
   }
 
   showCompletionModal(allCorrectForMessage, showResultsAfterConfirm) {
-  clearInterval(this.timer);
-  const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
-  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-  const modal = document.getElementById("myModal");
-  const modalMessage = document.getElementById("modalMessage");
-  const modalOkBtn = document.getElementById("modalOkBtn");
+    clearInterval(this.timer);
+    const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
+    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+    const modal = document.getElementById("myModal");
+    const modalMessage = document.getElementById("modalMessage");
+    const modalOkBtn = document.getElementById("modalOkBtn");
 
-  modalMessage.textContent = randomMessage;
-  modal.style.display = "flex";
+    modalMessage.textContent = randomMessage;
+    modal.style.display = "flex";
 
-  const closeModal = () => {
-    modal.style.display = "none";
-    if (showResultsAfterConfirm) {
-      this.showResults();
-    } else {
-      this.loadVerb();
-    }
-  };
+    const closeModal = () => {
+      modal.style.display = "none";
+      if (showResultsAfterConfirm) {
+        this.showResults();
+      } else {
+        this.loadVerb();
+      }
+    };
 
-  modalOkBtn.onclick = closeModal;
-  const keyHandler = (e) => {
-    if (e.key === "Enter") closeModal();
-  };
-  document.addEventListener("keydown", keyHandler);
-}
-    setTimeout(() => modalOkBtn.focus(), 100);
+    modalOkBtn.onclick = closeModal;
+    const keyHandler = (e) => {
+      if (e.key === "Enter") closeModal();
+    };
+    document.addEventListener("keydown", keyHandler);
   }
 
   async showResults() {
