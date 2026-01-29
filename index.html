@@ -23,13 +23,17 @@
     
     <div id="achievementNotificationContainer"></div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
+     <!-- Firebase SDK (CDN версия) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <script>
         // Firebase конфигурация - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
         const firebaseConfig = {
             apiKey: "AIzaSyB5TnXXY9uPWZ9e89gFTyCgJJzHQeyIGw4",
             authDomain: "irregularverbswithluna.firebaseapp.com",
-            databaseURL: "https://irregularverbswithluna-default-rtdb.europe-west1.firebasedatabase.app/", 
+            databaseURL: "ВАШ_DATABASE_URL_ВСТАВЬТЕ_ЗДЕСЬ", // ← ВСТАВЬТЕ ВАШ URL!
             projectId: "irregularverbswithluna",
             storageBucket: "irregularverbswithluna.firebasestorage.app",
             messagingSenderId: "395410317673",
