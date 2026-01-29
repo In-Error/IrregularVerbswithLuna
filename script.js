@@ -432,32 +432,39 @@ class VerbsTrainer {
   }
 
   checkAnswer() {
-    const psInput = document.getElementById("pastSimple").value.trim().toLowerCase();
-    const ppInput = document.getElementById("pastParticiple").value.trim().toLowerCase();
-    const currentVerb = this.verbs[this.currentIndex];
+  const psInput = document.getElementById("pastSimple").value.trim().toLowerCase();
+  const ppInput = document.getElementById("pastParticiple").value.trim().toLowerCase();
+  const currentVerb = this.verbs[this.currentIndex];
 
-    const isPsCorrect = this.checkForm(psInput, currentVerb.past);
-    const isPpCorrect = this.checkForm(ppInput, currentVerb.participle);
-    const isCorrect = isPsCorrect && isPpCorrect;
-
-    this.saveResult(isCorrect);
-    
-    if (isCorrect) {
-      this.currentIndex++;
-      if (this.currentIndex < this.verbs.length) {
-        this.loadVerb();
-      } else {
-        const correctAnswers = this.results.filter(r => r.correct).length;
-        if (correctAnswers === this.verbs.length) {
-          this.showCompletionModal(true, true);
-        } else {
-          this.showCompletionModal(false, true);
-        }
-      }
-    } else {
-      this.showCompletionModal(false, true); // сразу таблица результатов
-    }
+  // Защита от undefined
+  if (!currentVerb) {
+    this.showResults();
+    return;
   }
+
+  const isPsCorrect = this.checkForm(psInput, currentVerb.past);
+  const isPpCorrect = this.checkForm(ppInput, currentVerb.participle);
+  const isCorrect = isPsCorrect && isPpCorrect;
+
+  // Сохраняем результат ТОЛЬКО если глагол существует
+  this.saveResult(isCorrect);
+
+  if (isCorrect) {
+    this.currentIndex++;
+    if (this.currentIndex < this.verbs.length) {
+      this.loadVerb();
+    } else {
+      const correctAnswers = this.results.filter(r => r.correct).length;
+      if (correctAnswers === this.verbs.length) {
+        this.showCompletionModal(true, true);
+      } else {
+        this.showCompletionModal(false, true);
+      }
+    }
+  } else {
+    this.showCompletionModal(false, true);
+  }
+}
 
   checkForm(input, correctForms) {
     const formsArray = correctForms.toLowerCase().split(' ').map(f => f.trim());
