@@ -291,43 +291,38 @@ class VerbsTrainer {
     }
   }
 
-  // === ВСЕ ОСТАЛЬНЫЕ МЕТОДЫ БЕЗ ИЗМЕНЕНИЙ ===
-  // (showMainScreen, startGame, checkAnswer, showResults и т.д.)
-  // Они работают точно так же, только вместо this.currentUser.uid → this.currentStudentId
-
   showMainScreen() {
     const lastVerbGroupKey = localStorage.getItem('lastVerbGroupKey') || 'common1';
     const container = document.getElementById("mainContainer");
     container.innerHTML = `
-  <div class="user-profile">
-    <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
-         onerror="this.src='https://via.placeholder.com/100'">
-    <div class="user-info">
-      <div class="user-nickname">${this.userData.nickname}</div>
-      <div>Games: ${this.userData.totalGames || 0}</div>
-      <div>Correct answers: ${this.userData.totalCorrect || 0}</div>
-    </div>
-  </div>
-  
-  <h1>Irregular Verbs Trainer</h1>
-  
-  <div class="form-group">
-    <label for="verbGroup">Verb Group:</label>
-    <select id="verbGroup">
-      ${Object.keys(verbGroups).map(key => 
-        `<option value="${key}" ${key === lastVerbGroupKey ? 'selected' : ''}>
-          ${verbGroups[key].name}
-        </option>`
-      ).join('')}
-    </select>
-  </div>
-  
-  <button class="btn" id="startBtn">Start Game</button>
-  <button class="btn" id="editProfileBtn" style="background: #ff9800; margin-left: 10px;">Edit Profile</button>
-  <button class="btn" id="logoutBtn" style="background: #f44336; margin-left: 10px;">Logout</button>
-  
-  ${this.getAchievementsHTML()}
-`;
+      <div class="user-profile">
+        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
+             onerror="this.src='https://via.placeholder.com/100'">
+        <div class="user-info">
+          <div class="user-nickname">${this.userData.nickname}</div>
+          <div>Games: ${this.userData.totalGames || 0}</div>
+          <div>Correct answers: ${this.userData.totalCorrect || 0}</div>
+        </div>
+      </div>
+      
+      <h1>Irregular Verbs Trainer</h1>
+      
+      <div class="form-group">
+        <label for="verbGroup">Verb Group:</label>
+        <select id="verbGroup">
+          ${Object.keys(verbGroups).map(key => 
+            `<option value="${key}" ${key === lastVerbGroupKey ? 'selected' : ''}>
+              ${verbGroups[key].name}
+            </option>`
+          ).join('')}
+        </select>
+      </div>
+      
+      <button class="btn" id="startBtn">Start Game</button>
+      <button class="btn" id="backToStudentsBtn" style="background: #f44336; margin-left: 10px;">Back to List</button>
+      
+      ${this.getAchievementsHTML()}
+    `;
 
     document.getElementById("startBtn").addEventListener("click", () => {
       const groupKey = document.getElementById("verbGroup").value;
@@ -335,7 +330,7 @@ class VerbsTrainer {
       this.startGame(groupKey);
     });
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
+    document.getElementById("backToStudentsBtn").addEventListener("click", () => {
       this.showStudentSelect();
     });
   }
@@ -369,7 +364,6 @@ class VerbsTrainer {
       <div class="inputs">
         <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
         <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-        <button class="btn check-btn" id="checkBtn">Check</button>
       </div>
       <p class="result" id="result"></p>
     `;
@@ -381,8 +375,6 @@ class VerbsTrainer {
     document.getElementById("pastParticiple").addEventListener("keydown", e => {
       if (e.key === "Enter") this.checkAnswer();
     });
-
-    document.getElementById("checkBtn").addEventListener("click", () => this.checkAnswer());
 
     this.loadVerb();
   }
@@ -458,7 +450,7 @@ class VerbsTrainer {
         }
       }
     } else {
-      this.showCompletionModal(false, false); // ← продолжаем после ошибки
+      this.showCompletionModal(false, false);
     }
   }
 
@@ -607,7 +599,6 @@ class VerbsTrainer {
       <button class="restart-btn" id="restartBtn">Play Again</button>
       <button class="restart-btn" id="mainMenuBtn" style="background: #9c27b0; margin-left: 10px;">Main Menu</button>
       
-      ${this.getLeaderboardHTML()}
       ${this.getAchievementsHTML()}
     `;
 
