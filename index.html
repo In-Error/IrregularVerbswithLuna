@@ -8,7 +8,6 @@
 </head>
 <body>
 
-  <!-- Основной контейнер -->
   <div class="container" id="mainContainer">
     Loading...
   </div>
@@ -41,10 +40,7 @@
       appId: "1:395410317673:web:681edb61bee923c789ddf8"
     };
 
-    // Инициализируем Firebase
     firebase.initializeApp(firebaseConfig);
-
-    // Делаем доступными в script.js
     window.auth = firebase.auth();
     window.database = firebase.database();
   </script>
