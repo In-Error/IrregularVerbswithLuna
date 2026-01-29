@@ -327,11 +327,15 @@ class VerbsTrainer {
       ${this.getAchievementsHTML()}
     `;
 
-    document.getElementById("startBtn").addEventListener("click", () => {
-      const groupKey = document.getElementById("verbGroup").value;
-      localStorage.setItem('lastVerbGroupKey', groupKey);
-      this.startGame(groupKey);
-    });
+    document.getElementById("mainMenuBtn").addEventListener("click", () => {
+  // Сбрасываем всё состояние
+  this.currentVerbGroupKey = null;
+  this.verbs = [];
+  this.results = [];
+  this.currentIndex = 0;
+  clearInterval(this.timer);
+  this.showMainScreen();
+});
 
     document.getElementById("backToStudentsBtn").addEventListener("click", () => {
       this.showStudentSelect();
