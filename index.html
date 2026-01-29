@@ -12,7 +12,7 @@
     Loading...
   </div>
 
-  <!-- Модальное окно -->
+  <!-- Modal window -->
   <div id="myModal" class="modal">
     <div class="modal-content">
       <p id="modalMessage"></p>
@@ -20,15 +20,15 @@
     </div>
   </div>
 
-  <!-- Контейнер для уведомлений о достижениях -->
+  <!-- Achievement notifications -->
   <div id="achievementNotificationContainer"></div>
 
-  <!-- Firebase SDKs (без пробелов!) -->
+  <!-- Firebase SDKs (compat mode) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- Инициализация Firebase -->
+  <!-- Firebase config -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBsTnXXY9uPWZ9e89gFTyCgJJzHQeYIGw4",
@@ -40,11 +40,13 @@
       appId: "1:395410317673:web:681edb61bee923c789ddf8"
     };
 
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     window.auth = firebase.auth();
     window.database = firebase.database();
   </script>
 
+  <!-- Your app -->
   <script src="script.js"></script>
 </body>
 </html>
