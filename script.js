@@ -667,37 +667,46 @@ class VerbsTrainer {
   }
 
   showCompletionModal(allCorrectForMessage, showResultsAfterConfirm) {
-    clearInterval(this.timer);
-    const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    const modal = document.getElementById("myModal");
-    const modalMessage = document.getElementById("modalMessage");
-    const modalOkBtn = document.getElementById("modalOkBtn");
+  clearInterval(this.timer);
+  const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  const modal = document.getElementById("myModal");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalOkBtn = document.getElementById("modalOkBtn");
 
-    modalMessage.textContent = randomMessage;
-    modal.style.display = "flex";
+  modalMessage.textContent = randomMessage;
+  modal.style.display = "flex";
 
-    const closeModal = () => {
-      modal.style.display = "none";
-      if (showResultsAfterConfirm) {
-        this.showResults();
-      } else {
-        this.loadVerb();
-      }
-    };
+  const closeModal = () => {
+    modal.style.display = "none";
+    if (showResultsAfterConfirm) {
+      this.showResults();
+    } else {
+      this.loadVerb();
+    }
+  };
 
-    modalOkBtn.onclick = closeModal;
+  // Обработчик по клику
+  const clickHandler = () => closeModal();
+  modalOkBtn.addEventListener("click", clickHandler);
 
-    const keyHandler = (e) => {
-      if (e.key === "Enter") {
-        closeModal();
-        modal.removeEventListener("keydown", keyHandler);
-      }
-    };
+  // Обработчик по Enter
+  const keyHandler = (e) => {
+    if (e.key === "Enter") {
+      closeModal();
+    }
+  };
+  document.addEventListener("keydown", keyHandler);
 
-    modal.addEventListener("keydown", keyHandler);
-    setTimeout(() => modalOkBtn.focus(), 100);
-  }
+  // Убираем обработчики после закрытия
+  const cleanup = () => {
+    modalOkBtn.removeEventListener("click", clickHandler);
+    document.removeEventListener("keydown", keyHandler);
+  };
+
+  // Принудительно вызываем cleanup после закрытия
+  setTimeout(cleanup, 1000);
+}
 
   async showResults() {
     clearInterval(this.timer);
