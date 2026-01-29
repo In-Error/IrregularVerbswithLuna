@@ -1,56 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Irregular Verbs Trainer - British English</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Irregular Verbs Trainer - British English</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <div class="container" id="mainContainer">
-        <!-- Содержимое будет динамически добавляться через JS -->
-    </div>
-    
-    <div id="feedbackContainer"></div>
-    
-    <div id="myModal" class="modal">
-        <div class="modal-content">
-            <p id="modalMessage"></p>
-            <button id="modalOkBtn">OK</button>
-        </div>
-    </div>
-    
-    <div id="achievementNotificationContainer"></div>
 
-     <!-- Firebase SDK (CDN версия) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
-    <script>
-        // Firebase конфигурация - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
-        const firebaseConfig = {
-            apiKey: "AIzaSyB5TnXXY9uPWZ9e89gFTyCgJJzHQeyIGw4",
-            authDomain: "irregularverbswithluna.firebaseapp.com",
-            databaseURL: "ВАШ_DATABASE_URL_ВСТАВЬТЕ_ЗДЕСЬ", // ← ВСТАВЬТЕ ВАШ URL!
-            projectId: "irregularverbswithluna",
-            storageBucket: "irregularverbswithluna.firebasestorage.app",
-            messagingSenderId: "395410317673",
-            appId: "1:395410317673:web:681edb6be923c789ddff8",
-            measurementId: "G-06KGGB85GJ"
-        };
+  <div class="container" id="mainContainer">
+    Loading...
+  </div>
 
-        // Инициализация Firebase
-        firebase.initializeApp(firebaseConfig);
-        
-        // Делаем глобально доступными
-        window.auth = firebase.auth();
-        window.database = firebase.database();
-        
-        console.log("✅ Firebase инициализирован!");
-    </script>
-    
-    <script src="script.js"></script>
+  <!-- Модальное окно -->
+  <div id="myModal" class="modal">
+    <div class="modal-content">
+      <p id="modalMessage"></p>
+      <button id="modalOkBtn">OK</button>
+    </div>
+  </div>
+
+  <!-- Контейнер для уведомлений о достижениях -->
+  <div id="achievementNotificationContainer"></div>
+
+  <!-- 🔥 Подключаем compat-версии Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <!-- 🧩 Инициализация Firebase -->
+  <script>
+    // ВАШ КОНФИГ (скопирован из вашего сообщения)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBsTnXXY9uPWZ9e89gFTyCgJJzHQeYIGw4",
+      authDomain: "irregularverbswithluna.firebaseapp.com",
+      projectId: "irregularverbswithluna",
+      storageBucket: "irregularverbswithluna.firebasestorage.app",
+      messagingSenderId: "395410317673",
+      appId: "1:395410317673:web:681edb61bee923c789ddf8",
+      measurementId: "G-06KGGB85GJ"
+    };
+
+    // Инициализируем Firebase в compat-режиме
+    firebase.initializeApp(firebaseConfig);
+
+    // Делаем auth и database доступными для script.js
+    window.auth = firebase.auth();
+    window.database = firebase.database();
+  </script>
+
+  <!-- Ваш скрипт -->
+  <script src="script.js"></script>
 </body>
 </html>
