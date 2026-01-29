@@ -745,3 +745,48 @@ input:focus, select:focus {
   max-width: 300px !important;
   box-sizing: border-box !important;
 }
+/* Список учеников */
+.student-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px;
+}
+.student-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.student-item:hover {
+  transform: scale(1.05);
+}
+.student-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #FFD700;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+.student-name {
+  margin-top: 8px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+}
+/* Кнопка Check */
+.check-btn {
+  width: 100%;
+  max-width: 200px;
+  margin-top: 10px;
+}
+@media (max-width: 600px) {
+  .check-btn {
+    max-width: 100%;
+    padding: 0.8rem;
+    font-size: 1.1rem;
+  }
+}
