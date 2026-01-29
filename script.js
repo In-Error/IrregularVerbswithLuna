@@ -176,10 +176,20 @@ class VerbsTrainer {
         <button class="btn" id="registerBtn">Register</button>
       </div>
     `;
-    document.getElementById("loginBtn").addEventListener("click", () => alert("Login not implemented yet"));
-    document.getElementById("registerBtn").addEventListener("click", () => alert("Registration not implemented yet"));
-  }
+    document.getElementById("loginBtn").addEventListener("click", () => {
+  showModal("⚠️ Login is not implemented yet", "This feature will be added soon. For now, you can play as a guest.");
+});
+document.getElementById("registerBtn").addEventListener("click", () => {
+  showModal("⚠️ Registration is not implemented yet", "Stay tuned! We're working on user accounts.");
+});
 
+function showModal(title, message) {
+  const modal = document.getElementById("myModal");
+  const modalMsg = document.getElementById("modalMessage");
+  modalMsg.innerHTML = `<strong>${title}</strong><br><small>${message}</small>`;
+  modal.style.display = "flex";
+  document.getElementById("modalOkBtn").onclick = () => modal.style.display = "none";
+}
   async logout() {
     try {
       await auth.signOut();
