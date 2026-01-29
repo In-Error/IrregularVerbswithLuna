@@ -299,35 +299,35 @@ class VerbsTrainer {
     const lastVerbGroupKey = localStorage.getItem('lastVerbGroupKey') || 'common1';
     const container = document.getElementById("mainContainer");
     container.innerHTML = `
-      <div class="user-profile">
-        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
-             onerror="this.src='https://via.placeholder.com/100'">
-        <div class="user-info">
-          <div class="user-nickname">${this.userData.nickname}</div>
-          <div>Games: ${this.userData.totalGames || 0}</div>
-          <div>Correct answers: ${this.userData.totalCorrect || 0}</div>
-        </div>
-      </div>
-      
-      <h1>Irregular Verbs Trainer</h1>
-      
-      <div class="form-group">
-        <label for="verbGroup">Verb Group:</label>
-        <select id="verbGroup">
-          ${Object.keys(verbGroups).map(key => 
-            `<option value="${key}" ${key === lastVerbGroupKey ? 'selected' : ''}>
-              ${verbGroups[key].name}
-            </option>`
-          ).join('')}
-        </select>
-      </div>
-      
-      <button class="btn" id="startBtn">Start Game</button>
-      <button class="btn" id="logoutBtn" style="background: #f44336; margin-left: 10px;">Back to List</button>
-      
-      ${this.getLeaderboardHTML()}
-      ${this.getAchievementsHTML()}
-    `;
+  <div class="user-profile">
+    <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
+         onerror="this.src='https://via.placeholder.com/100'">
+    <div class="user-info">
+      <div class="user-nickname">${this.userData.nickname}</div>
+      <div>Games: ${this.userData.totalGames || 0}</div>
+      <div>Correct answers: ${this.userData.totalCorrect || 0}</div>
+    </div>
+  </div>
+  
+  <h1>Irregular Verbs Trainer</h1>
+  
+  <div class="form-group">
+    <label for="verbGroup">Verb Group:</label>
+    <select id="verbGroup">
+      ${Object.keys(verbGroups).map(key => 
+        `<option value="${key}" ${key === lastVerbGroupKey ? 'selected' : ''}>
+          ${verbGroups[key].name}
+        </option>`
+      ).join('')}
+    </select>
+  </div>
+  
+  <button class="btn" id="startBtn">Start Game</button>
+  <button class="btn" id="editProfileBtn" style="background: #ff9800; margin-left: 10px;">Edit Profile</button>
+  <button class="btn" id="logoutBtn" style="background: #f44336; margin-left: 10px;">Logout</button>
+  
+  ${this.getAchievementsHTML()}
+`;
 
     document.getElementById("startBtn").addEventListener("click", () => {
       const groupKey = document.getElementById("verbGroup").value;
@@ -631,70 +631,6 @@ class VerbsTrainer {
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }, 100);
-  }
-
-  async getLeaderboardHTML() {
-    try {
-      const snapshot = await database.ref('students').once('value');
-      const studentsData = snapshot.val();
-      const allScores = [];
-
-      for (const studentId in studentsData) {
-        const student = studentsData[studentId];
-        const records = student.records || [];
-        records.forEach(record => {
-          allScores.push({
-            name: student.nickname || 'Anonymous',
-            avatar: student.avatarUrl || 'https://via.placeholder.com/100',
-            correct: record.correct || 0,
-            total: record.total || 0,
-            percent: record.percent || 0,
-            date: record.date || 'N/A',
-            gameTime: record.gameTime || 'N/A',
-            time: record.time || 'N/A',
-            group: record.group || 'N/A'
-          });
-        });
-      }
-
-      allScores.sort((a, b) => {
-        if (b.percent !== a.percent) return b.percent - a.percent;
-        if (b.correct !== a.correct) return b.correct - a.correct;
-        const timeToSeconds = (timeStr) => {
-          if (timeStr === 'N/A') return Infinity;
-          const parts = timeStr.match(/(\d+)m\s*(\d+)s/);
-          if (parts) {
-            return parseInt(parts[1]) * 60 + parseInt(parts[2]);
-          }
-          return Infinity;
-        };
-        return timeToSeconds(a.time) - timeToSeconds(b.time);
-      });
-
-      let lbHtml = '<div class="leaderboard">';
-      lbHtml += '<div class="leaderboard-title">LEADERBOARD</div>';
-      if (allScores.length === 0) {
-        lbHtml += '<p>No results yet.</p>';
-      } else {
-        lbHtml += '<ol>';
-        allScores.slice(0, 10).forEach((p, index) => {
-          lbHtml += `
-            <li style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
-              <span style="font-weight: bold; color: gold;">${index + 1}.</span>
-              <img src="${p.avatar}" alt="${p.name}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"
-                   onerror="this.src='https://via.placeholder.com/30'">
-              <strong>${p.name}</strong> (${p.group}): ${p.correct}/${p.total} (${p.percent}%) — ${p.date} ${p.gameTime} (${p.time})
-            </li>
-          `;
-        });
-        lbHtml += '</ol>';
-      }
-      lbHtml += '</div>';
-      return lbHtml;
-    } catch (error) {
-      console.error("Error loading leaderboard:", error);
-      return '<div class="leaderboard"><p>Error loading leaderboard</p></div>';
-    }
   }
 
   getAchievementsHTML() {
