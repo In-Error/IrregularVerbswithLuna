@@ -607,8 +607,7 @@ class VerbsTrainer {
           </tbody>
         </table>
       </div>
-      <button class="restart-btn" id="restartBtn">Play Again</button>
-      <button class="restart-btn" id="mainMenuBtn" style="background: #9c27b0; margin-left: 10px;">Main Menu</button>
+      <button class="restart-btn" id="mainMenuBtn">Main Menu</button>
       
       ${this.getAchievementsHTML()}
     `;
@@ -620,10 +619,6 @@ class VerbsTrainer {
         const wordToSpeak = event.target.dataset.word;
         this.playSpeech(wordToSpeak);
       });
-    });
-
-    document.getElementById("restartBtn").addEventListener("click", () => {
-      this.startGame(this.currentVerbGroupKey);
     });
 
     document.getElementById("mainMenuBtn").addEventListener("click", () => {
