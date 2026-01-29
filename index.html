@@ -6,11 +6,6 @@
     <title>Irregular Verbs Trainer - British English</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap" rel="stylesheet">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
     <div class="container" id="mainContainer">
@@ -27,6 +22,30 @@
     </div>
     
     <div id="achievementNotificationContainer"></div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase конфигурация - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5TnXXY9uPWZ9e89gFTyCgJJzHQeyIGw4",
+            authDomain: "irregularverbswithluna.firebaseapp.com",
+            databaseURL: "https://irregularverbswithluna-default-rtdb.europe-west1.firebasedatabase.app/", 
+            projectId: "irregularverbswithluna",
+            storageBucket: "irregularverbswithluna.firebasestorage.app",
+            messagingSenderId: "395410317673",
+            appId: "1:395410317673:web:681edb6be923c789ddff8",
+            measurementId: "G-06KGGB85GJ"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Делаем глобально доступными
+        window.auth = firebase.auth();
+        window.database = firebase.database();
+        
+        console.log("✅ Firebase инициализирован!");
+    </script>
     
     <script src="script.js"></script>
 </body>
