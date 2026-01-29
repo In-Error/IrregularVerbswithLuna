@@ -450,7 +450,7 @@ class VerbsTrainer {
         }
       }
     } else {
-      this.showCompletionModal(false, false);
+      this.showCompletionModal(false, true);
     }
   }
 
@@ -477,30 +477,31 @@ class VerbsTrainer {
   }
 
   showCompletionModal(allCorrectForMessage, showResultsAfterConfirm) {
-    clearInterval(this.timer);
-    const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
-    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
-    const modal = document.getElementById("myModal");
-    const modalMessage = document.getElementById("modalMessage");
-    const modalOkBtn = document.getElementById("modalOkBtn");
+  clearInterval(this.timer);
+  const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
+  const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+  const modal = document.getElementById("myModal");
+  const modalMessage = document.getElementById("modalMessage");
+  const modalOkBtn = document.getElementById("modalOkBtn");
 
-    modalMessage.textContent = randomMessage;
-    modal.style.display = "flex";
+  modalMessage.textContent = randomMessage;
+  modal.style.display = "flex";
 
-    const closeModal = () => {
-      modal.style.display = "none";
-      if (showResultsAfterConfirm) {
-        this.showResults();
-      } else {
-        this.loadVerb();
-      }
-    };
+  const closeModal = () => {
+    modal.style.display = "none";
+    if (showResultsAfterConfirm) {
+      this.showResults();
+    } else {
+      this.loadVerb();
+    }
+  };
 
-    modalOkBtn.onclick = closeModal;
-    const keyHandler = (e) => {
-      if (e.key === "Enter") closeModal();
-    };
-    document.addEventListener("keydown", keyHandler);
+  modalOkBtn.onclick = closeModal;
+  const keyHandler = (e) => {
+    if (e.key === "Enter") closeModal();
+  };
+  document.addEventListener("keydown", keyHandler);
+}
     setTimeout(() => modalOkBtn.focus(), 100);
   }
 
