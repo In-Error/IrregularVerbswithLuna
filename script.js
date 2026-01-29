@@ -534,9 +534,27 @@ class VerbsTrainer {
       
       <div class="translation" id="translation"></div>
       <div class="inputs">
-        <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" />
-        <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" />
-      </div>
+  <input 
+    type="text" 
+    class="input-box" 
+    id="pastSimple" 
+    placeholder="Past Simple"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+  />
+  <input 
+    type="text" 
+    class="input-box" 
+    id="pastParticiple" 
+    placeholder="Past Participle"
+    autocomplete="off"
+    autocorrect="off"
+    autocapitalize="off"
+    spellcheck="false"
+  />
+</div>
       <p class="result" id="result"></p>
     `;
 
