@@ -4,9 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Irregular Verbs Trainer - British English</title>
-  <!-- ДОБАВЬТЕ ЭТУ СТРОКУ ДЛЯ ВЕБ-ШРИФТА -->
+  <!-- Шрифт с поддержкой кириллицы -->
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=6" />
+  <link rel="stylesheet" href="style.css?v=7" />
 </head>
 <body>
 
@@ -23,9 +23,8 @@
 
   <div id="achievementNotificationContainer"></div>
 
-  <!-- Firebase SDKs -->
+  <!-- Только App + Database (без Auth!) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
   <!-- Firebase config -->
@@ -41,10 +40,9 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    window.auth = firebase.auth();
-    window.database = firebase.database();
+    window.database = firebase.database(); // ← только database
   </script>
 
-  <script src="script.js"></script>
+  <script src="script.js?v=1"></script>
 </body>
 </html>
