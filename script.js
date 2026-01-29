@@ -709,6 +709,7 @@ class VerbsTrainer {
 }
 
   async showResults() {
+  try {
     clearInterval(this.timer);
     const total = this.verbs.length;
     const correct = this.results.filter(r => r.correct).length;
@@ -716,7 +717,7 @@ class VerbsTrainer {
     const now = new Date();
     const gameEndTime = Date.now();
     const timeTakenMs = gameEndTime - this.gameStartTime;
-    
+
     const minutes = Math.floor(timeTakenMs / 60000);
     const seconds = ((timeTakenMs % 60000) / 1000).toFixed(0);
     const formattedTime = `${minutes}m ${seconds < 10 ? '0' : ''}${seconds}s`;
@@ -724,7 +725,7 @@ class VerbsTrainer {
 
     this.userData.totalGames = (this.userData.totalGames || 0) + 1;
     this.userData.totalCorrect = (this.userData.totalCorrect || 0) + correct;
-    
+
     this.userData.records.push({
       correct,
       total,
@@ -774,11 +775,11 @@ class VerbsTrainer {
     this.results.forEach(r => {
       const psClass = this.checkForm(r.yourPs.toLowerCase(), r.correctPs) ? 'correct' : 'wrong';
       const ppClass = this.checkForm(r.yourPp.toLowerCase(), r.correctPp) ? 'correct' : 'wrong';
-      
+
       const correctPsButtons = r.correctPs.split(' ').map(part => 
         `<button class="play-table-audio-btn" data-word="${part}"></button>`
       ).join('');
-      
+
       const correctPpButtons = r.correctPp.split(' ').map(part => 
         `<button class="play-table-audio-btn" data-word="${part}"></button>`
       ).join('');
@@ -808,13 +809,16 @@ class VerbsTrainer {
     `;
 
     document.getElementById("mainContainer").innerHTML = html;
-    
-    document.querySelectorAll('.play-table-audio-btn').forEach(button => {
-      button.addEventListener('click', (event) => {
-        const wordToSpeak = event.target.dataset.word;
-        this.playSpeech(wordToSpeak);
+
+    // Безопасное добавление обработчиков
+    try {
+      document.querySelectorAll('.play-table-audio-btn').forEach(button => {
+        button.addEventListener('click', (event) => {
+          const wordToSpeak = event.target.dataset.word;
+          this.playSpeech(wordToSpeak);
+        });
       });
-    });
+    } catch (e) { console.warn("Audio buttons error:", e); }
 
     document.getElementById("restartBtn").addEventListener("click", () => {
       this.startGame(this.currentVerbGroupKey);
@@ -824,10 +828,24 @@ class VerbsTrainer {
       this.showMainScreen();
     });
 
-    setTimeout(() => {
+    // Безопасный scroll
+    try {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }, 100);
+    } catch (e) {
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+
+  } catch (error) {
+    console.error("showResults failed:", error);
+    // Если что-то сломалось — хотя бы покажем простой экран
+    const container = document.getElementById("mainContainer");
+    container.innerHTML = `
+      <h2>Error loading results</h2>
+      <p>Try again or refresh.</p>
+      <button class="btn" onclick="location.reload()">Refresh</button>
+    `;
   }
+}
 
   async getLeaderboardHTML() {
     try {
