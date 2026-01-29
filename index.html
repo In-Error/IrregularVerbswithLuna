@@ -23,17 +23,17 @@
     
     <div id="achievementNotificationContainer"></div>
 
-     <!-- Firebase SDK (CDN версия) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
+    <!-- === ПРАВИЛЬНЫЕ FIREBASE СКРИПТЫ (compat-режим) === -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <!-- Storage не подключён — добавьте, если понадобится -->
+
     <script>
-        // Firebase конфигурация - ВАШИ РЕАЛЬНЫЕ ДАННЫЕ
+        // 🔑 Конфигурация Firebase (ТОЛЬКО НУЖНЫЕ ПОЛЯ)
         const firebaseConfig = {
             apiKey: "AIzaSyB5TnXXY9uPWZ9e89gFTyCgJJzHQeyIGw4",
             authDomain: "irregularverbswithluna.firebaseapp.com",
-            databaseURL: "ВАШ_DATABASE_URL_ВСТАВЬТЕ_ЗДЕСЬ", // ← ВСТАВЬТЕ ВАШ URL!
             projectId: "irregularverbswithluna",
             storageBucket: "irregularverbswithluna.firebasestorage.app",
             messagingSenderId: "395410317673",
@@ -41,16 +41,17 @@
             measurementId: "G-06KGGB85GJ"
         };
 
-        // Инициализация Firebase
+        // 🚀 Инициализация
         firebase.initializeApp(firebaseConfig);
-        
-        // Делаем глобально доступными
+
+        // Глобальные переменные для удобства
         window.auth = firebase.auth();
-        window.database = firebase.database();
-        
-        console.log("✅ Firebase инициализирован!");
+        window.db = firebase.firestore(); // ← именно так вы обращаетесь к Firestore
+
+        console.log("✅ Firebase инициализирован! Готов к работе с Firestore.");
     </script>
-    
+
+    <!-- Ваш основной скрипт -->
     <script src="script.js"></script>
 </body>
 </html>
