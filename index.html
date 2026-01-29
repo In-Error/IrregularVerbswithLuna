@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Irregular Verbs Trainer - British English</title>
+  <!-- ДОБАВЬТЕ ЭТУ СТРОКУ ДЛЯ ВЕБ-ШРИФТА -->
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -12,7 +14,6 @@
     Loading...
   </div>
 
-  <!-- Модальное окно -->
   <div id="myModal" class="modal">
     <div class="modal-content">
       <p id="modalMessage"></p>
@@ -20,15 +21,14 @@
     </div>
   </div>
 
-  <!-- Уведомления о достижениях -->
   <div id="achievementNotificationContainer"></div>
 
-  <!-- Firebase SDKs (compat-режим) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- Инициализация Firebase -->
+  <!-- Firebase config -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyBsTnXXY9uPWZ9e89gFTyCgJJzHQeYIGw4",
@@ -45,7 +45,6 @@
     window.database = firebase.database();
   </script>
 
-  <!-- Ваш скрипт -->
   <script src="script.js"></script>
 </body>
 </html>
