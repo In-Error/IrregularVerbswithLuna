@@ -34,7 +34,7 @@
 }
 
 body {
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: 'Comic Neue', cursive;
     background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
     color: var(--text-color);
     display: flex;
@@ -103,7 +103,7 @@ select {
     font-size: 1.1rem;
     background: rgba(255,255,255,0.9);
     color: #333;
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: 'Comic Neue', cursive;
 }
 
 input:focus, select:focus {
