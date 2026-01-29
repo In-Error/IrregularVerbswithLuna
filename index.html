@@ -23,34 +23,28 @@
   <!-- Контейнер для уведомлений о достижениях -->
   <div id="achievementNotificationContainer"></div>
 
-  <!-- 🔥 Подключаем compat-версии Firebase SDK -->
+  <!-- Firebase SDKs (без пробелов!) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 
-  <!-- 🧩 Инициализация Firebase -->
+  <!-- Инициализация Firebase -->
   <script>
-    // ВАШ КОНФИГ (скопирован из вашего сообщения)
     const firebaseConfig = {
-  apiKey: "AIzaSyBsTnXXY9uPWZ9e89gFTyCgJJzHQeYIGw4",
-  authDomain: "irregularverbswithluna.firebaseapp.com",
-  databaseURL: "https://irregularverbswithluna-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "irregularverbswithluna",
-  storageBucket: "irregularverbswithluna.firebasestorage.app",
-  messagingSenderId: "395410317673",
-  appId: "1:395410317673:web:681edb61bee923c789ddf8",
-  measurementId: "G-06KGGB85GJ"
-};
+      apiKey: "AIzaSyBsTnXXY9uPWZ9e89gFTyCgJJzHQeYIGw4",
+      authDomain: "irregularverbswithluna.firebaseapp.com",
+      databaseURL: "https://irregularverbswithluna-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "irregularverbswithluna",
+      storageBucket: "irregularverbswithluna.firebasestorage.app",
+      messagingSenderId: "395410317673",
+      appId: "1:395410317673:web:681edb61bee923c789ddf8"
+    };
 
-    // Инициализируем Firebase в compat-режиме
     firebase.initializeApp(firebaseConfig);
-
-    // Делаем auth и database доступными для script.js
     window.auth = firebase.auth();
     window.database = firebase.database();
   </script>
 
-  <!-- Ваш скрипт -->
   <script src="script.js"></script>
 </body>
 </html>
