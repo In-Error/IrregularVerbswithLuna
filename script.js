@@ -339,11 +339,13 @@ class VerbsTrainer {
   }
 
   startGame(groupKey) {
+    // КРИТИЧЕСКИ ВАЖНО: сбросить состояние
     this.currentVerbGroupKey = groupKey;
     this.verbs = [...verbGroups[groupKey].verbs];
+    this.results = []; // ← очищаем результаты
+    this.currentIndex = 0; // ← сбрасываем индекс
+    
     this.shuffleVerbs();
-    this.currentIndex = 0;
-    this.results = [];
     this.gameStartTime = Date.now();
 
     document.getElementById("mainContainer").innerHTML = `
@@ -453,7 +455,6 @@ class VerbsTrainer {
         }
       }
     } else {
-      // ← ЭТО ГЛАВНОЕ ИЗМЕНЕНИЕ:
       this.showCompletionModal(false, true); // сразу таблица результатов
     }
   }
