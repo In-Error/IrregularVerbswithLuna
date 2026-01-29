@@ -1,30 +1,16 @@
 // Firebase конфигурация - ЗАМЕНИТЕ ЭТИ ДАННЫЕ НА СВОИ
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    databaseURL: "YOUR_DATABASE_URL",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-
-// Инициализация Firebase
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const database = firebase.database();
-const storage = firebase.storage();
+// Firebase уже инициализирован в index.html
+const auth = window.auth;
+const database = window.database;
 
 // Полный список глаголов с URL картинок
 const verbs = [
-    {base:"arise", past:"arose", participle:"arisen", ru:"возникать", image: "https://example.com/images/arise.jpg"},
-    {base:"awake", past:"awoke", participle:"awoken", ru:"просыпаться", image: "https://example.com/images/awake.jpg"},
-    {base:"be", past:"was were", participle:"been", ru:"быть", image: "https://example.com/images/be.jpg"},
-    // ... добавьте остальные глаголы с изображениями
-    // Для теста можно использовать временные URL:
-    // {base:"write", past:"wrote", participle:"written", ru:"писать", image: "https://picsum.photos/200/150?random=1"}
+    {base:"arise", past:"arose", participle:"arisen", ru:"возникать", image: "https://picsum.photos/200/150?random=1"},
+    {base:"awake", past:"awoke", participle:"awoken", ru:"просыпаться", image: "https://picsum.photos/200/150?random=2"},
+    {base:"be", past:"was were", participle:"been", ru:"быть", image: "https://picsum.photos/200/150?random=3"},
+    // ... оставьте остальные глаголы как были, добавьте поле image для каждого
+    {base:"write", past:"wrote", participle:"written", ru:"писать", image: "https://picsum.photos/200/150?random=132"}
 ];
-
 // Фильтруем common глаголы
 const lessCommonList = ["arise","awake","bear","bend","bet","bleed","breed","broadcast","deal","kneel","mow","overtake","sew","stink","strike"];
 const advancedList = ["bind","burst","cling","creep","grind","saw","shed","sow","spit","swell","weep","wind"];
@@ -155,7 +141,7 @@ class VerbsTrainer {
         }
     }
 
-    async uploadAvatar(file) {
+    /* async uploadAvatar(file) {
         if (!this.currentUser || !file) return null;
         
         try {
@@ -176,7 +162,7 @@ class VerbsTrainer {
             console.error("Error uploading avatar:", error);
             return null;
         }
-    }
+    } */
 
     playSpeech(text) {
         if (!text || !('speechSynthesis' in window)) return;
@@ -303,11 +289,11 @@ class VerbsTrainer {
             // Создаем пользователя
             const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             
-            // Загружаем аватар если есть
+            // Загружаем аватар если есть (пока отключено)
             let avatarUrl = "";
-            if (avatarFile) {
-                avatarUrl = await this.uploadAvatar(avatarFile);
-            }
+            // if (avatarFile) {
+            //     avatarUrl = await this.uploadAvatar(avatarFile);
+            // }
             
             // Обновляем профиль
             await userCredential.user.updateProfile({
@@ -439,13 +425,13 @@ class VerbsTrainer {
                 // Обновляем никнейм
                 this.userData.nickname = nickname;
                 
-                // Обновляем аватар если есть
-                if (avatarFile) {
-                    const avatarUrl = await this.uploadAvatar(avatarFile);
-                    if (avatarUrl) {
-                        this.userData.avatarUrl = avatarUrl;
-                    }
-                }
+                // Обновляем аватар если есть (пока отключено)
+                // if (avatarFile) {
+                //     const avatarUrl = await this.uploadAvatar(avatarFile);
+                //     if (avatarUrl) {
+                //         this.userData.avatarUrl = avatarUrl;
+                //     }
+                // }
                 
                 // Обновляем профиль Firebase
                 await this.currentUser.updateProfile({
