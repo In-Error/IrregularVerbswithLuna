@@ -721,3 +721,12 @@ input:focus, select:focus {
         flex-direction: column;
     }
 }
+/* Мобильные устройства: делаем поля ввода компактными */
+@media (max-width: 600px) {
+  .input-box {
+    height: auto;
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+}
