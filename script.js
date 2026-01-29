@@ -1,1435 +1,905 @@
-// === КОНФИГУРАЦИЯ FIREBASE ===
+// Firebase конфигурация - ЗАМЕНИТЕ ЭТИ ДАННЫЕ НА СВОИ
 const firebaseConfig = {
-    apiKey: "AIzaSyA1gMGXixXqfgptc0-Nx5fRWCbS2lefXLY",
-    authDomain: "global-elite-club-dcd0d.firebaseapp.com",
-    projectId: "global-elite-club-dcd0d",
-    storageBucket: "global-elite-club-dcd0d.firebasestorage.app",
-    messagingSenderId: "372974979606",
-    appId: "1:372974979606:web:b3128f5165621e5fbc4337",
-    measurementId: "G-3MTEVE62XT"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    databaseURL: "YOUR_DATABASE_URL",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
 };
 
-// Инициализируем Firebase
+// Инициализация Firebase
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const auth = firebase.auth();
+const database = firebase.database();
+const storage = firebase.storage();
 
-// Константы
-const students = [
-    "Alina", "Artem", "Dania", "Denis", "Lera", "Nastia Che", 
-    "Nastia S", "Natasha", "Rita", "Selin", "Vika"
+// Полный список глаголов с URL картинок
+const verbs = [
+    {base:"arise", past:"arose", participle:"arisen", ru:"возникать", image: "https://example.com/images/arise.jpg"},
+    {base:"awake", past:"awoke", participle:"awoken", ru:"просыпаться", image: "https://example.com/images/awake.jpg"},
+    {base:"be", past:"was were", participle:"been", ru:"быть", image: "https://example.com/images/be.jpg"},
+    // ... добавьте остальные глаголы с изображениями
+    // Для теста можно использовать временные URL:
+    // {base:"write", past:"wrote", participle:"written", ru:"писать", image: "https://picsum.photos/200/150?random=1"}
 ];
 
-// Хранилища данных
-let studentWords = {};
-let studentWorks = {};
-let studentNames = {};
-let additionalWorks = {};
-let totalPoints = {};
-let currentSelectedStudent = null;
-let currentWordIndexes = {};
-let helpSectionsData = {}; // Изменил название, чтобы избежать конфликта
-let currentSectionId = null;
-let isHelpAdminMode = false;
-let currentSelectedWeek = null;
+// Фильтруем common глаголы
+const lessCommonList = ["arise","awake","bear","bend","bet","bleed","breed","broadcast","deal","kneel","mow","overtake","sew","stink","strike"];
+const advancedList = ["bind","burst","cling","creep","grind","saw","shed","sow","spit","swell","weep","wind"];
+const commonVerbs = verbs.filter(v => !lessCommonList.includes(v.base) && !advancedList.includes(v.base));
 
-// Функция обновления статуса синхронизации
-function updateSyncStatus(message, isSuccess = true) {
-    const statusElement = document.getElementById('syncStatus');
-    if (statusElement) {
-        statusElement.textContent = message;
-        statusElement.style.color = isSuccess ? '#00ff00' : '#ff4444';
-        statusElement.style.textShadow = isSuccess ? '0 0 5px rgba(0, 255, 0, 0.7)' : '0 0 5px rgba(255, 68, 68, 0.7)';
+// Делим common на 5 частей
+const commonParts = [];
+for (let i = 0; i < 5; i++) {
+    commonParts[i] = commonVerbs.slice(i * 21, (i + 1) * 21);
+}
+
+// Группы глаголов
+const verbGroups = {
+    common1: { verbs: commonParts[0], name: "Common (part 1)" },
+    common2: { verbs: commonParts[1], name: "Common (part 2)" },
+    common3: { verbs: commonParts[2], name: "Common (part 3)" },
+    common4: { verbs: commonParts[3], name: "Common (part 4)" },
+    common5: { verbs: commonParts[4], name: "Common (part 5)" },
+    lessCommon: { verbs: verbs.filter(v => lessCommonList.includes(v.base)), name: "Less Common (15 verbs)" },
+    advanced: { verbs: verbs.filter(v => advancedList.includes(v.base)), name: "Advanced (12 verbs)" },
+    all: { verbs: verbs, name: "All (132 verbs)" }
+};
+
+// Сообщения для модальных окон
+const allCorrectMessages = [
+    "Wow, cool! Jump to the next training!",
+    "Yay! The next training is calling you - go, go, go!",
+    "Great! Run to the next one, superhero!",
+    "Nice! The next training is waiting - don't be lazy!",
+    "Hooray! Show the next training who's the boss!",
+    "Awesome! One more training and you'll be a star!",
+    "Good job! Next level - let's go!",
+    "Wow! The next training can't wait for you!"
+];
+
+const notAllCorrectMessages = [
+    "Almost there! Next time you'll be the champion!",
+    "Good try! You're getting better and better!",
+    "Nice work! A little more practice - and you'll smash it!",
+    "You're awesome anyway! Try again and win next time!",
+    "So close! One more go and you'll get it!",
+    "Don't worry! Even superheroes train a lot!",
+    "Great effort! The top score is waiting for you!",
+    "Keep going! Every try makes you stronger!"
+];
+
+// Достижения
+const achievements = {
+    novice: { name: "Novice", description: "Complete your first game.", icon: "🌟" },
+    master_common1: { name: "Master Common 1", description: "100% correct in Common (part 1).", icon: "🥇" },
+    master_common2: { name: "Master Common 2", description: "100% correct in Common (part 2).", icon: "🥇" },
+    master_common3: { name: "Master Common 3", description: "100% correct in Common (part 3).", icon: "🥇" },
+    master_common4: { name: "Master Common 4", description: "100% correct in Common (part 4).", icon: "🥇" },
+    master_common5: { name: "Master Common 5", description: "100% correct in Common (part 5).", icon: "🥇" },
+    master_lessCommon: { name: "Master Less Common", description: "100% correct in Less Common.", icon: "🏆" },
+    master_advanced: { name: "Master Advanced", description: "100% correct in Advanced.", icon: "🏅" },
+    ultimate_champion: { name: "Ultimate Champion", description: "100% correct in All verbs.", icon: "👑" },
+};
+
+class VerbsTrainer {
+    constructor() {
+        this.currentUser = null;
+        this.userData = null;
+        this.currentVerbGroupKey = null;
+        this.verbs = [];
+        this.currentIndex = 0;
+        this.timeLeft = 30;
+        this.timer = null;
+        this.results = [];
+        this.gameStartTime = null;
+        this.britishVoice = null;
+
+        this.initializeSpeechSynthesis();
+        this.initializeAuth();
     }
-}
 
-// === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
-function getWeekNumber(date) {
-    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
-    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-}
-
-function getCurrentWeekId() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const week = getWeekNumber(today);
-    return `${year}-W${week.toString().padStart(2, '0')}`;
-}
-
-function getWeekDates(weekId) {
-    const [year, weekStr] = weekId.split('-W');
-    const week = parseInt(weekStr);
-    
-    const firstDayOfYear = new Date(year, 0, 1);
-    const daysOffset = (week - 1) * 7 - firstDayOfYear.getDay() + 1;
-    
-    const startDate = new Date(year, 0, daysOffset);
-    const endDate = new Date(year, 0, daysOffset + 6);
-    
-    const formatDate = (date) => {
-        return date.toLocaleDateString('ru-RU', { 
-            day: '2-digit', 
-            month: '2-digit' 
-        });
-    };
-    
-    return {
-        start: formatDate(startDate),
-        end: formatDate(endDate)
-    };
-}
-
-// === ЗАГРУЗКА ДАННЫХ ===
-async function loadAllData() {
-    try {
-        updateSyncStatus('🔄 Загрузка данных...');
-        
-        // Загружаем слова
-        const wordsSnapshot = await db.collection('words').get();
-        studentWords = {};
-        wordsSnapshot.forEach(doc => {
-            studentWords[doc.id] = doc.data().words || [];
-        });
-        
-        // Загружаем работы
-        const worksSnapshot = await db.collection('works').get();
-        studentWorks = {};
-        worksSnapshot.forEach(doc => {
-            studentWorks[doc.id] = doc.data();
-        });
-
-        // Загружаем имена для рейтингов
-        const namesSnapshot = await db.collection('ratingNames').get();
-        studentNames = {};
-        namesSnapshot.forEach(doc => {
-            studentNames[doc.id] = doc.data().name;
-        });
-
-        // Загружаем дополнительные работы
-        const additionalSnapshot = await db.collection('additionalWorks').get();
-        additionalWorks = {};
-        additionalSnapshot.forEach(doc => {
-            additionalWorks[doc.id] = doc.data().works || [];
-        });
-        
-        // Загружаем очки за все время
-        const totalPointsSnapshot = await db.collection('totalPoints').get();
-        totalPoints = {};
-        totalPointsSnapshot.forEach(doc => {
-            totalPoints[doc.id] = doc.data().points || 0;
-        });
-        
-        // Загружаем разделы помощи
-        await loadHelpSections();
-        
-        updateSyncStatus('✅ Данные загружены');
-        
-   } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-        updateSyncStatus('❌ Ошибка загрузки', false);
-        
-        // Fallback на localStorage
-        studentWords = JSON.parse(localStorage.getItem('studentWords')) || {};
-        studentWorks = JSON.parse(localStorage.getItem('studentWorks')) || {};
-        studentNames = JSON.parse(localStorage.getItem('studentNames')) || {};
-        additionalWorks = JSON.parse(localStorage.getItem('additionalWorks')) || {};
-        totalPoints = JSON.parse(localStorage.getItem('totalPoints')) || {};
-        helpSectionsData = JSON.parse(localStorage.getItem('helpSectionsData')) || {};
+    initializeSpeechSynthesis() {
+        if ('speechSynthesis' in window) {
+            speechSynthesis.onvoiceschanged = () => {
+                const voices = speechSynthesis.getVoices();
+                this.britishVoice = voices.find(voice => voice.lang === 'en-GB' || (voice.lang.startsWith('en-') && voice.name.includes('UK')));
+                if (!this.britishVoice) {
+                    this.britishVoice = voices.find(voice => voice.lang.startsWith('en-'));
+                }
+            };
+            speechSynthesis.getVoices();
+        }
     }
-    
-    // Обновляем интерфейс
-    initializeWeekRating();
-    initializeTotalRating();
-    initializeStudentsGrid();
-}
 
-// === ФУНКЦИИ ДЛЯ РЕЙТИНГА ЗА НЕДЕЛЮ ===
-async function initializeWeekRating(weekId = null) {
-    const weekRatingContainer = document.getElementById('weekRatingContainer');
-    if (!weekRatingContainer) return;
-    
-    if (!weekId) {
-        weekId = currentSelectedWeek || getCurrentWeekId();
-    }
-    
-    currentSelectedWeek = weekId;
-    
-    const weekDates = getWeekDates(weekId);
-    const weekPeriod = `${weekDates.start} - ${weekDates.end}`;
-    
-    try {
-        const doc = await db.collection('weekRankings').doc(weekId).get();
-        
-        let html = `
-            <div class="rating-header">
-                <div class="rating-title week">🏆 Рейтинг за неделю</div>
-                <div class="rating-period">Неделя: ${weekPeriod}</div>
-            </div>
-        `;
-        
-        if (!doc.exists) {
-            html += '<div class="no-data">Нет данных за эту неделю</div>';
-        } else {
-            const data = doc.data();
-            const weekPoints = data.weekPoints || {};
-            
-            const studentsWithWeekPoints = students.map(student => ({
-                name: student,
-                points: weekPoints[student] || 0,
-                avatar: `avatars/${student}.png`
-            }));
-            
-            studentsWithWeekPoints.sort((a, b) => b.points - a.points);
-            const studentsWithPoints = studentsWithWeekPoints.filter(s => s.points > 0);
-            
-            if (studentsWithPoints.length === 0) {
-                html += '<div class="no-data">Нет данных за эту неделю</div>';
+    initializeAuth() {
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                this.currentUser = user;
+                this.loadUserData();
             } else {
-                studentsWithPoints.forEach((studentData, index) => {
-                    const isTopThree = index < 3;
-                    const itemClass = `rating-item week ${isTopThree ? 'top-three' : ''}`;
-                    const avatarClass = `rating-avatar week ${isTopThree ? 'top-three' : ''}`;
-                    
-                    html += `
-                        <div class="${itemClass}">
-                            <img src="${studentData.avatar}" alt="${studentData.name}" class="${avatarClass}" 
-                                 onerror="this.src='avatars/default.png'">
-                            <div class="rating-info">
-                                <div class="rating-name">${studentData.name}</div>
-                                <div class="rating-position">Место: ${index + 1}</div>
-                            </div>
-                            <div class="rating-score week">${studentData.points}</div>
-                        </div>
-                    `;
-                });
+                this.currentUser = null;
+                this.userData = null;
+                this.showAuthScreen();
             }
-        }
-        
-        weekRatingContainer.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Ошибка загрузки рейтинга недели:', error);
-        weekRatingContainer.innerHTML = `
-            <div class="rating-header">
-                <div class="rating-title week">🏆 Рейтинг за неделю</div>
-                <div class="rating-period">Ошибка загрузки</div>
-            </div>
-            <div class="no-data" style="color: #ff4444;">Ошибка загрузки данных</div>
-        `;
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ РЕЙТИНГА ЗА ВСЕ ВРЕМЯ ===
-async function initializeTotalRating() {
-    const totalRatingContainer = document.getElementById('totalRatingContainer');
-    if (!totalRatingContainer) return;
-    
-    try {
-        const totalPointsSnapshot = await db.collection('totalPoints').get();
-        const pointsMap = {};
-        
-        totalPointsSnapshot.forEach(doc => {
-            pointsMap[doc.id] = doc.data().points || 0;
         });
+    }
+
+    async loadUserData() {
+        try {
+            const snapshot = await database.ref('users/' + this.currentUser.uid).once('value');
+            this.userData = snapshot.val() || {
+                nickname: this.currentUser.displayName || this.currentUser.email.split('@')[0],
+                avatarUrl: this.currentUser.photoURL || 'https://via.placeholder.com/100',
+                records: [],
+                achievements: {},
+                totalGames: 0,
+                totalCorrect: 0
+            };
+            this.showMainScreen();
+        } catch (error) {
+            console.error("Error loading user data:", error);
+            this.showMainScreen();
+        }
+    }
+
+    async saveUserData() {
+        if (!this.currentUser) return;
         
-        const studentsWithTotalPoints = students.map(student => ({
-            name: student,
-            points: pointsMap[student] || 0,
-            avatar: `avatars/${student}.png`
-        }));
+        try {
+            await database.ref('users/' + this.currentUser.uid).set(this.userData);
+        } catch (error) {
+            console.error("Error saving user data:", error);
+        }
+    }
+
+    async uploadAvatar(file) {
+        if (!this.currentUser || !file) return null;
         
-        studentsWithTotalPoints.sort((a, b) => b.points - a.points);
-        
-        let html = `
-            <div class="rating-header">
-                <div class="rating-title total">⭐ Рейтинг за все время</div>
-                <div class="rating-period">Сумма очков за все недели</div>
-            </div>
-        `;
-        
-        if (studentsWithTotalPoints.every(s => s.points === 0)) {
-            html += '<div class="no-data">Нет данных за все время</div>';
-        } else {
-            studentsWithTotalPoints.forEach((studentData, index) => {
-                if (studentData.points === 0) return;
-                
-                const isTopThree = index < 3;
-                const itemClass = `rating-item total ${isTopThree ? 'top-three' : ''}`;
-                const avatarClass = `rating-avatar total ${isTopThree ? 'top-three' : ''}`;
-                
-                html += `
-                    <div class="${itemClass}">
-                        <img src="${studentData.avatar}" alt="${studentData.name}" class="${avatarClass}"
-                             onerror="this.src='avatars/default.png'">
-                        <div class="rating-info">
-                            <div class="rating-name">${studentData.name}</div>
-                            <div class="rating-position">Место: ${index + 1}</div>
-                        </div>
-                        <div class="rating-score total">${studentData.points}</div>
-                    </div>
-                `;
+        try {
+            const storageRef = storage.ref();
+            const avatarRef = storageRef.child(`avatars/${this.currentUser.uid}/${Date.now()}_${file.name}`);
+            const snapshot = await avatarRef.put(file);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            
+            await this.currentUser.updateProfile({
+                photoURL: downloadURL
             });
-        }
-        
-        totalRatingContainer.innerHTML = html;
-        
-    } catch (error) {
-        console.error('Ошибка загрузки общего рейтинга:', error);
-        totalRatingContainer.innerHTML = `
-            <div class="rating-header">
-                <div class="rating-title total">⭐ Рейтинг за все время</div>
-                <div class="rating-period">Сумма очков за все недели</div>
-            </div>
-            <div class="no-data" style="color: #ff4444;">Ошибка загрузки данных</div>
-        `;
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ АДМИНКИ ===
-function initializeAdminPage() {
-    const weekInput = getCurrentWeekId();
-    const weekSelector = document.getElementById('weekSelector');
-    if (weekSelector) {
-        weekSelector.value = weekInput;
-    }
-    
-    generateRankingInputs();
-    loadWeekRankings(weekInput);
-}
-
-function generateRankingInputs() {
-    const speedContainer = document.getElementById('speedRankings');
-    const accuracyContainer = document.getElementById('accuracyRankings');
-    
-    if (!speedContainer || !accuracyContainer) return;
-    
-    speedContainer.innerHTML = '';
-    accuracyContainer.innerHTML = '';
-    
-    for (let i = 1; i <= 11; i++) {
-        const points = 12 - i;
-        
-        // Позиция для скорости
-        const speedGroup = document.createElement('div');
-        speedGroup.className = 'ranking-input-group';
-        speedGroup.innerHTML = `
-            <div class="ranking-position">${i}</div>
-            <select class="ranking-select" id="speed_${i}" onchange="calculateTotals()">
-                <option value="">Выберите ученика</option>
-                ${students.map(student => `<option value="${student}">${student}</option>`).join('')}
-            </select>
-            <div class="ranking-points">${points}</div>
-        `;
-        speedContainer.appendChild(speedGroup);
-        
-        // Позиция для точности
-        const accuracyGroup = document.createElement('div');
-        accuracyGroup.className = 'ranking-input-group';
-        accuracyGroup.innerHTML = `
-            <div class="ranking-position">${i}</div>
-            <select class="ranking-select" id="accuracy_${i}" onchange="calculateTotals()">
-                <option value="">Выберите ученика</option>
-                ${students.map(student => `<option value="${student}">${student}</option>`).join('')}
-            </select>
-            <div class="ranking-points">${points}</div>
-        `;
-        accuracyContainer.appendChild(accuracyGroup);
-    }
-}
-
-function calculateTotals() {
-    let speedTotal = 0;
-    let accuracyTotal = 0;
-    
-    for (let i = 1; i <= 11; i++) {
-        const speedSelect = document.getElementById(`speed_${i}`);
-        if (speedSelect && speedSelect.value) {
-            speedTotal += (12 - i);
-        }
-        
-        const accuracySelect = document.getElementById(`accuracy_${i}`);
-        if (accuracySelect && accuracySelect.value) {
-            accuracyTotal += (12 - i);
-        }
-    }
-    
-    const speedTotalEl = document.getElementById('speedTotal');
-    const accuracyTotalEl = document.getElementById('accuracyTotal');
-    const weekTotalEl = document.getElementById('weekTotal');
-    
-    if (speedTotalEl) speedTotalEl.textContent = speedTotal;
-    if (accuracyTotalEl) accuracyTotalEl.textContent = accuracyTotal;
-    if (weekTotalEl) weekTotalEl.textContent = speedTotal + accuracyTotal;
-}
-
-async function loadWeekRankings(weekId) {
-    try {
-        const doc = await db.collection('weekRankings').doc(weekId).get();
-        if (doc.exists) {
-            const data = doc.data();
             
-            for (const [position, student] of Object.entries(data.speed || {})) {
-                const select = document.getElementById(`speed_${position}`);
-                if (select) select.value = student;
-            }
+            this.userData.avatarUrl = downloadURL;
+            await this.saveUserData();
             
-            for (const [position, student] of Object.entries(data.accuracy || {})) {
-                const select = document.getElementById(`accuracy_${position}`);
-                if (select) select.value = student;
-            }
-            
-            calculateTotals();
+            return downloadURL;
+        } catch (error) {
+            console.error("Error uploading avatar:", error);
+            return null;
         }
-    } catch (error) {
-        console.error('Ошибка загрузки рейтингов недели:', error);
     }
-}
 
-async function updateTotalPoints(weekPoints) {
-    const batch = db.batch();
-    
-    for (const [student, points] of Object.entries(weekPoints)) {
-        const studentRef = db.collection('totalPoints').doc(student);
-        const doc = await studentRef.get();
+    playSpeech(text) {
+        if (!text || !('speechSynthesis' in window)) return;
         
-        if (doc.exists) {
-            const currentPoints = doc.data().points || 0;
-            batch.update(studentRef, { points: currentPoints + points });
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'en-GB';
+        
+        if (this.britishVoice) {
+            utterance.voice = this.britishVoice;
         } else {
-            batch.set(studentRef, { points: points });
-        }
-    }
-    
-    await batch.commit();
-}
-
-async function saveWeekRankings() {
-    const weekSelector = document.getElementById('weekSelector');
-    if (!weekSelector) return;
-    
-    const weekId = weekSelector.value;
-    if (!weekId) {
-        alert('Выберите неделю!');
-        return;
-    }
-    
-    const speedRankings = {};
-    const accuracyRankings = {};
-    const weekPoints = {};
-    
-    for (let i = 1; i <= 11; i++) {
-        const speedSelect = document.getElementById(`speed_${i}`);
-        if (speedSelect && speedSelect.value) {
-            speedRankings[i] = speedSelect.value;
-            const points = 12 - i;
-            weekPoints[speedSelect.value] = (weekPoints[speedSelect.value] || 0) + points;
+            utterance.lang = 'en-US';
         }
         
-        const accuracySelect = document.getElementById(`accuracy_${i}`);
-        if (accuracySelect && accuracySelect.value) {
-            accuracyRankings[i] = accuracySelect.value;
-            const points = 12 - i;
-            weekPoints[accuracySelect.value] = (weekPoints[accuracySelect.value] || 0) + points;
-        }
+        speechSynthesis.speak(utterance);
     }
-    
-    if (Object.keys(speedRankings).length !== 11 || Object.keys(accuracyRankings).length !== 11) {
-        if (!confirm('Не все позиции заполнены. Сохранить частичные данные?')) {
+
+    showAuthScreen() {
+        const container = document.getElementById("mainContainer");
+        container.innerHTML = `
+            <h1>Irregular Verbs Trainer</h1>
+            <div class="auth-section">
+                <div class="auth-buttons">
+                    <button class="btn" id="loginBtn">Login</button>
+                    <button class="btn" id="registerBtn">Register</button>
+                </div>
+                
+                <div id="loginForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="loginEmail">Email:</label>
+                        <input type="text" id="loginEmail" placeholder="your@email.com" />
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password:</label>
+                        <input type="password" id="loginPassword" placeholder="Password" />
+                    </div>
+                    <button class="btn" id="submitLogin">Login</button>
+                </div>
+                
+                <div id="registerForm" style="display: none;">
+                    <div class="form-group">
+                        <label for="registerEmail">Email:</label>
+                        <input type="text" id="registerEmail" placeholder="your@email.com" />
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Password:</label>
+                        <input type="password" id="registerPassword" placeholder="Password (min 6 chars)" />
+                    </div>
+                    <div class="form-group">
+                        <label for="registerNickname">Nickname:</label>
+                        <input type="text" id="registerNickname" placeholder="Your nickname" />
+                    </div>
+                    <div class="upload-container">
+                        <label for="avatarUpload">Avatar (optional):</label>
+                        <input type="file" id="avatarUpload" accept="image/*" />
+                        <img id="avatarPreview" class="upload-preview" src="" style="display: none;" />
+                    </div>
+                    <button class="btn" id="submitRegister">Register</button>
+                </div>
+            </div>
+        `;
+
+        // Обработчики кнопок
+        document.getElementById("loginBtn").addEventListener("click", () => {
+            document.getElementById("loginForm").style.display = "block";
+            document.getElementById("registerForm").style.display = "none";
+        });
+
+        document.getElementById("registerBtn").addEventListener("click", () => {
+            document.getElementById("registerForm").style.display = "block";
+            document.getElementById("loginForm").style.display = "none";
+        });
+
+        document.getElementById("submitLogin").addEventListener("click", () => this.login());
+        document.getElementById("submitRegister").addEventListener("click", () => this.register());
+        
+        // Предпросмотр аватара
+        document.getElementById("avatarUpload").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById("avatarPreview").src = e.target.result;
+                    document.getElementById("avatarPreview").style.display = "block";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    async login() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value.trim();
+        
+        if (!email || !password) {
+            alert("Please enter email and password!");
             return;
         }
+        
+        try {
+            await auth.signInWithEmailAndPassword(email, password);
+        } catch (error) {
+            alert("Login failed: " + error.message);
+        }
     }
-    
-    try {
-        await db.collection('weekRankings').doc(weekId).set({
-            speed: speedRankings,
-            accuracy: accuracyRankings,
-            weekPoints: weekPoints,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        await updateTotalPoints(weekPoints);
-        
-        updateSyncStatus('✅ Результаты недели сохранены');
-        alert(`Результаты недели ${weekId} успешно сохранены!`);
-        
-        initializeWeekRating(weekId);
-        initializeTotalRating();
-        
-    } catch (error) {
-        console.error('Ошибка сохранения:', error);
-        updateSyncStatus('❌ Ошибка сохранения', false);
-        alert('Ошибка сохранения: ' + error.message);
-    }
-}
 
-function clearWeekRankings() {
-    if (confirm('Очистить все выбранные значения?')) {
-        for (let i = 1; i <= 11; i++) {
-            const speedSelect = document.getElementById(`speed_${i}`);
-            const accuracySelect = document.getElementById(`accuracy_${i}`);
+    async register() {
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value.trim();
+        const nickname = document.getElementById("registerNickname").value.trim();
+        const avatarFile = document.getElementById("avatarUpload").files[0];
+        
+        if (!email || !password || !nickname) {
+            alert("Please fill all required fields!");
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert("Password must be at least 6 characters!");
+            return;
+        }
+        
+        try {
+            // Создаем пользователя
+            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
             
-            if (speedSelect) speedSelect.value = '';
-            if (accuracySelect) accuracySelect.value = '';
-        }
-        calculateTotals();
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ СЛОВ ===
-async function saveWords(studentName, wordsArray) {
-    try {
-        await db.collection('words').doc(studentName).set({
-            words: wordsArray,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        studentWords[studentName] = wordsArray;
-        updateSyncStatus('✅ Слова сохранены');
-    } catch (error) {
-        console.error('Ошибка сохранения слов:', error);
-        studentWords[studentName] = wordsArray;
-        localStorage.setItem('studentWords', JSON.stringify(studentWords));
-    }
-}
-
-async function addNewWord(studentName, word) {
-    const words = studentWords[studentName] || [];
-    if (word.trim() && !words.includes(word.trim())) {
-        words.push(word.trim());
-        await saveWords(studentName, words);
-        if (currentSelectedStudent === studentName) {
-            initializeStudentWorks(studentName);
-        }
-        initializeStudentsGrid();
-    }
-}
-
-async function removeCurrentWord(studentName) {
-    const words = studentWords[studentName] || [];
-    if (words.length > 0) {
-        const currentIndex = currentWordIndexes[studentName] || 0;
-        if (currentIndex >= 0 && currentIndex < words.length) {
-            if (confirm(`Удалить слово "${words[currentIndex]}"?`)) {
-                words.splice(currentIndex, 1);
-                await saveWords(studentName, words);
-                if (currentSelectedStudent === studentName) {
-                    initializeStudentWorks(studentName);
-                }
-                initializeStudentsGrid();
-            }
-        }
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ РАБОТ ===
-function compressImage(file, maxWidth = 1200, quality = 0.8) {
-    return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        
-        img.onload = function() {
-            let width = img.width;
-            let height = img.height;
-            
-            if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
+            // Загружаем аватар если есть
+            let avatarUrl = "";
+            if (avatarFile) {
+                avatarUrl = await this.uploadAvatar(avatarFile);
             }
             
-            canvas.width = width;
-            canvas.height = height;
+            // Обновляем профиль
+            await userCredential.user.updateProfile({
+                displayName: nickname,
+                photoURL: avatarUrl
+            });
             
-            ctx.drawImage(img, 0, 0, width, height);
+            // Создаем начальные данные пользователя
+            this.userData = {
+                nickname: nickname,
+                avatarUrl: avatarUrl || 'https://via.placeholder.com/100',
+                records: [],
+                achievements: {},
+                totalGames: 0,
+                totalCorrect: 0
+            };
+            
+            await this.saveUserData();
+            
+        } catch (error) {
+            alert("Registration failed: " + error.message);
+        }
+    }
+
+    async logout() {
+        try {
+            await auth.signOut();
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
+    }
+
+    showMainScreen() {
+        const lastVerbGroupKey = localStorage.getItem('lastVerbGroupKey') || 'common1';
+        const container = document.getElementById("mainContainer");
+        
+        container.innerHTML = `
+            <div class="user-profile">
+                <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
+                     onerror="this.src='https://via.placeholder.com/100'">
+                <div class="user-info">
+                    <div class="user-nickname">${this.userData.nickname}</div>
+                    <div>Games: ${this.userData.totalGames || 0}</div>
+                    <div>Correct answers: ${this.userData.totalCorrect || 0}</div>
+                </div>
+            </div>
+            
+            <h1>Irregular Verbs Trainer</h1>
+            
+            <div class="form-group">
+                <label for="verbGroup">Verb Group:</label>
+                <select id="verbGroup">
+                    ${Object.keys(verbGroups).map(key => 
+                        `<option value="${key}" ${key === lastVerbGroupKey ? 'selected' : ''}>
+                            ${verbGroups[key].name}
+                        </option>`
+                    ).join('')}
+                </select>
+            </div>
+            
+            <button class="btn" id="startBtn">Start Game</button>
+            <button class="btn" id="editProfileBtn" style="background: #ff9800; margin-left: 10px;">Edit Profile</button>
+            <button class="btn" id="logoutBtn" style="background: #f44336; margin-left: 10px;">Logout</button>
+            
+            ${this.getLeaderboardHTML()}
+            ${this.getAchievementsHTML()}
+        `;
+
+        document.getElementById("startBtn").addEventListener("click", () => {
+            const groupKey = document.getElementById("verbGroup").value;
+            localStorage.setItem('lastVerbGroupKey', groupKey);
+            this.startGame(groupKey);
+        });
+
+        document.getElementById("editProfileBtn").addEventListener("click", () => this.showEditProfileScreen());
+        document.getElementById("logoutBtn").addEventListener("click", () => this.logout());
+    }
+
+    showEditProfileScreen() {
+        const container = document.getElementById("mainContainer");
+        
+        container.innerHTML = `
+            <h1>Edit Profile</h1>
+            
+            <div class="user-profile">
+                <img id="editAvatarPreview" src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
+                     onerror="this.src='https://via.placeholder.com/100'">
+                <div class="user-info">
+                    <div class="user-nickname">${this.userData.nickname}</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="editNickname">Nickname:</label>
+                <input type="text" id="editNickname" value="${this.userData.nickname}" />
+            </div>
+            
+            <div class="upload-container">
+                <label for="editAvatarUpload">Change Avatar:</label>
+                <input type="file" id="editAvatarUpload" accept="image/*" />
+            </div>
+            
+            <button class="btn" id="saveProfileBtn">Save Changes</button>
+            <button class="btn" id="cancelEditBtn" style="background: #f44336; margin-left: 10px;">Cancel</button>
+        `;
+
+        // Предпросмотр аватара
+        document.getElementById("editAvatarUpload").addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById("editAvatarPreview").src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+            const nickname = document.getElementById("editNickname").value.trim();
+            const avatarFile = document.getElementById("editAvatarUpload").files[0];
+            
+            if (!nickname) {
+                alert("Nickname cannot be empty!");
+                return;
+            }
             
             try {
-                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-                const base64Size = Math.round((compressedBase64.length * 3) / 4);
+                // Обновляем никнейм
+                this.userData.nickname = nickname;
                 
-                resolve({
-                    data: compressedBase64,
-                    originalSize: file.size,
-                    compressedSize: base64Size,
-                    width: width,
-                    height: height
-                });
-            } catch (error) {
-                reject(new Error('Ошибка сжатия изображения'));
-            }
-        };
-        
-        img.onerror = function() {
-            reject(new Error('Ошибка загрузки изображения'));
-        };
-        
-        img.src = URL.createObjectURL(file);
-    });
-}
-
-async function saveWork(student, workType, imageBase64, compressionInfo = '') {
-    const workKey = `${student}_${workType}`;
-    try {
-        await db.collection('works').doc(workKey).set({
-            image: imageBase64,
-            student: student,
-            workType: workType,
-            compressionInfo: compressionInfo,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        studentWorks[workKey] = {
-            image: imageBase64,
-            compressionInfo: compressionInfo,
-            timestamp: new Date().toISOString()
-        };
-        updateSyncStatus('✅ Работа сохранена');
-    } catch (error) {
-        console.error('Ошибка сохранения работы:', error);
-        studentWorks[workKey] = {
-            image: imageBase64,
-            compressionInfo: compressionInfo,
-            timestamp: new Date().toISOString()
-        };
-        localStorage.setItem('studentWorks', JSON.stringify(studentWorks));
-    }
-}
-
-async function handleWorkUpload(input, student, workType) {
-    const file = input.files[0];
-    if (file && file.type.startsWith('image/')) {
-        try {
-            updateSyncStatus('🔄 Проверка изображения...');
-            
-            if (file.size > 10 * 1024 * 1024) {
-                throw new Error('Файл слишком большой. Максимум 10MB');
-            }
-            
-            updateSyncStatus('🔄 Сжатие изображения...');
-            
-            let compressionResult = await compressImage(file, 1200, 0.8);
-            
-            if (compressionResult.compressedSize > 900000) {
-                updateSyncStatus('🔄 Дополнительное сжатие...');
-                compressionResult = await compressImage(file, 800, 0.6);
-            }
-            
-            if (compressionResult.compressedSize > 950000) {
-                throw new Error('Изображение слишком детализированное после сжатия. Попробуйте другое изображение');
-            }
-            
-            const compressionInfo = `Сжато: ${(compressionResult.originalSize/1024/1024).toFixed(1)}MB → ${(compressionResult.compressedSize/1024/1024).toFixed(1)}MB (${compressionResult.width}×${compressionResult.height})`;
-            
-            await saveWork(student, workType, compressionResult.data, compressionInfo);
-            if (currentSelectedStudent === student) {
-                initializeStudentWorks(student);
-            }
-            updateSyncStatus('✅ Изображение загружено!');
-            
-        } catch (error) {
-            console.error('Ошибка загрузки:', error);
-            updateSyncStatus('❌ Ошибка: ' + error.message, false);
-            alert('Ошибка загрузки: ' + error.message);
-        }
-    } else {
-        alert('Пожалуйста, выберите файл изображения (JPEG, PNG)');
-    }
-}
-
-async function deleteWork(student, workType) {
-    const workKey = `${student}_${workType}`;
-    if (confirm('Вы уверены, что хотите удалить эту работу?')) {
-        try {
-            await db.collection('works').doc(workKey).delete();
-            delete studentWorks[workKey];
-            if (currentSelectedStudent === student) {
-                initializeStudentWorks(student);
-            }
-            updateSyncStatus('✅ Работа удалена');
-            
-        } catch (error) {
-            console.error('Ошибка удаления:', error);
-            delete studentWorks[workKey];
-            localStorage.setItem('studentWorks', JSON.stringify(studentWorks));
-            if (currentSelectedStudent === student) {
-                initializeStudentWorks(student);
-            }
-            updateSyncStatus('✅ Работа удалена (локально)');
-        }
-    }
-}
-
-// === ИНТЕРФЕЙС УЧЕНИКОВ ===
-function initializeStudentsGrid() {
-    const studentsGrid = document.getElementById('studentsGrid');
-    if (!studentsGrid) return;
-    
-    studentsGrid.innerHTML = '';
-    
-    students.forEach(student => {
-        const words = studentWords[student] || [];
-        const card = document.createElement('div');
-        card.className = `student-card ${currentSelectedStudent === student ? 'active' : ''}`;
-        card.innerHTML = `
-            <div class="student-card-name">${student}</div>
-            <div class="student-card-words">${words.length} words</div>
-        `;
-        card.onclick = () => openStudentWorks(student);
-        studentsGrid.appendChild(card);
-    });
-}
-
-function openStudentWorks(student) {
-    currentSelectedStudent = student;
-    initializeStudentsGrid();
-    initializeStudentWorks(student);
-    
-    const section = document.getElementById('studentWorksSection');
-    if (section) {
-        section.classList.add('active');
-        const selectedStudentName = document.getElementById('selectedStudentName');
-        if (selectedStudentName) {
-            selectedStudentName.textContent = student;
-        }
-        section.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function initializeStudentWorks(student) {
-    const worksList = document.getElementById('worksList');
-    if (!worksList) return;
-    
-    worksList.innerHTML = '';
-    
-    const workItem = document.createElement('div');
-    workItem.className = 'work-item';
-    
-    workItem.innerHTML = `
-        <div class="words-container">
-            ${createWordsSection(student)}
-        </div>
-        <div class="works-container">
-            <div class="works-category">
-                <div class="category-title">Основные работы</div>
-                <div class="works-row">
-                    <div class="upload-areas">
-                        ${createWorkArea(student, 'work1')}
-                        ${createWorkArea(student, 'work2')}
-                        ${createWorkArea(student, 'work3')}
-                    </div>
-                </div>
-                <button class="add-work-btn" onclick="toggleAdditionalWorks('${student}', 'work')">+</button>
-                <div class="additional-works" id="additionalWorks_${student}_work">
-                    ${createAdditionalWorks(student, 'work')}
-                </div>
-            </div>
-            <div class="works-category">
-                <div class="category-title">Проверки</div>
-                <div class="works-row">
-                    <div class="upload-areas">
-                        ${createWorkArea(student, 'check1')}
-                        ${createWorkArea(student, 'check2')}
-                        ${createWorkArea(student, 'check3')}
-                    </div>
-                </div>
-                <button class="add-work-btn" onclick="toggleAdditionalWorks('${student}', 'check')">+</button>
-                <div class="additional-works" id="additionalWorks_${student}_check">
-                    ${createAdditionalWorks(student, 'check')}
-                </div>
-            </div>
-            <div class="works-category">
-                <div class="category-title">Ваши объяснения</div>
-                <div class="works-row">
-                    <div class="upload-areas">
-                        ${createWorkArea(student, 'explain1')}
-                        ${createWorkArea(student, 'explain2')}
-                        ${createWorkArea(student, 'explain3')}
-                    </div>
-                </div>
-                <button class="add-work-btn" onclick="toggleAdditionalWorks('${student}', 'explain')">+</button>
-                <div class="additional-works" id="additionalWorks_${student}_explain">
-                    ${createAdditionalWorks(student, 'explain')}
-                </div>
-            </div>
-        </div>
-    `;
-    
-    worksList.appendChild(workItem);
-}
-
-function createWordsSection(student) {
-    const words = studentWords[student] || [];
-    const hasWords = words.length > 0;
-    const currentIndex = currentWordIndexes[student] || 0;
-    
-    return `
-        <div class="words-counter">
-            ${words.length} words
-        </div>
-        <div class="words-display-container">
-            <div class="word-navigation">
-                <button class="nav-arrow" onclick="navigateWord('${student}', -1)" ${words.length <= 1 ? 'disabled' : ''}>◀</button>
-                <div class="current-word-display">
-                    ${hasWords ? 
-                        `<div class="word-text">${words[currentIndex]}</div>
-                         <button class="delete-word-btn" onclick="removeCurrentWord('${student}')" title="Удалить слово">🗑️ Удалить</button>
-                         <div class="word-counter">${currentIndex + 1}</div>` 
-                        : '<div class="no-words">No words added</div>'
+                // Обновляем аватар если есть
+                if (avatarFile) {
+                    const avatarUrl = await this.uploadAvatar(avatarFile);
+                    if (avatarUrl) {
+                        this.userData.avatarUrl = avatarUrl;
                     }
+                }
+                
+                // Обновляем профиль Firebase
+                await this.currentUser.updateProfile({
+                    displayName: nickname,
+                    photoURL: this.userData.avatarUrl
+                });
+                
+                await this.saveUserData();
+                this.showMainScreen();
+                
+            } catch (error) {
+                alert("Error updating profile: " + error.message);
+            }
+        });
+
+        document.getElementById("cancelEditBtn").addEventListener("click", () => {
+            this.showMainScreen();
+        });
+    }
+
+    startGame(groupKey) {
+        this.currentVerbGroupKey = groupKey;
+        this.verbs = [...verbGroups[groupKey].verbs];
+        this.shuffleVerbs();
+        this.currentIndex = 0;
+        this.results = [];
+        this.gameStartTime = Date.now();
+
+        document.getElementById("mainContainer").innerHTML = `
+            <div class="user-profile">
+                <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
+                     onerror="this.src='https://via.placeholder.com/100'">
+                <div class="user-info">
+                    <div class="user-nickname">${this.userData.nickname}</div>
                 </div>
-                <button class="nav-arrow" onclick="navigateWord('${student}', 1)" ${words.length <= 1 ? 'disabled' : ''}>▶</button>
             </div>
-        </div>
-        <div class="word-input-container">
-            <input 
-                type="text" 
-                class="word-input" 
-                id="wordInput_${student}"
-                placeholder="Add word"
-                onkeypress="handleWordInput(event, '${student}')"
-            >
-        </div>
-    `;
-}
-
-function handleWordInput(event, student) {
-    if (event.key === 'Enter') {
-        const input = event.target;
-        const word = input.value.trim();
-        if (word) {
-            addNewWord(student, word).then(() => {
-                input.value = '';
-                setTimeout(() => {
-                    input.focus();
-                }, 0);
-            });
-        }
-        event.preventDefault();
-    }
-}
-
-function navigateWord(student, direction) {
-    const words = studentWords[student] || [];
-    if (words.length === 0) return;
-    
-    if (!currentWordIndexes.hasOwnProperty(student)) {
-        currentWordIndexes[student] = 0;
-    }
-    
-    let newIndex = currentWordIndexes[student] + direction;
-    
-    if (newIndex < 0) newIndex = words.length - 1;
-    if (newIndex >= words.length) newIndex = 0;
-    
-    currentWordIndexes[student] = newIndex;
-    
-    const displayElement = document.querySelector(`[onkeypress="handleWordInput(event, '${student}')"]`)
-        ?.closest('.words-container')
-        ?.querySelector('.current-word-display');
-        
-    if (displayElement) {
-        displayElement.innerHTML = `
-            <div class="word-text">${words[newIndex]}</div>
-            <button class="delete-word-btn" onclick="removeCurrentWord('${student}')" title="Удалить слово">🗑️ Удалить</button>
-            <div class="word-counter">${newIndex + 1}</div>
+            
+            <h1>Hi, ${this.userData.nickname}!</h1>
+            <div class="timer">Time left: <span id="timer">30</span> sec</div>
+            
+            <div class="verb-container">
+                <div id="verbImageContainer"></div>
+                <div class="verb" id="verb"></div>
+            </div>
+            
+            <div class="translation" id="translation"></div>
+            <div class="inputs">
+                <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" />
+                <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" />
+            </div>
+            <p class="result" id="result"></p>
         `;
-    }
-}
 
-function createWorkArea(student, workType) {
-    const workKey = `${student}_${workType}`;
-    const workData = studentWorks[workKey];
-    
-    if (workData && workData.image) {
-        const compressionInfo = workData.compressionInfo ? `<div class="compression-info">${workData.compressionInfo}</div>` : '';
-        const timestamp = workData.timestamp ? formatDateTime(workData.timestamp) : '';
-        
-        return `
-            <div class="upload-area has-work">
-                <img src="${workData.image}" class="work-preview" alt="${workType}" onclick="openFullscreen('${workData.image}')">
-                <div class="work-number">${getWorkTitle(workType)}</div>
-                ${compressionInfo}
-                <div class="upload-time">${timestamp}</div>
-                <button class="delete-btn" onclick="deleteWork('${student}', '${workType}')">🗑️ Удалить</button>
-                <input type="file" class="file-input" accept="image/*" onchange="handleWorkUpload(this, '${student}', '${workType}')">
-            </div>
-        `;
-    } else {
-        return `
-            <div class="upload-area" onclick="triggerWorkUpload(this, '${student}', '${workType}')">
-                <div class="work-number">${getWorkTitle(workType)}</div>
-                <div class="upload-text">Нажмите для загрузки</div>
-                <div class="compression-info">Поддерживаются файлы до 10MB</div>
-                <input type="file" class="file-input" accept="image/*" onchange="handleWorkUpload(this, '${student}', '${workType}')">
-            </div>
-        `;
-    }
-}
-
-function getWorkTitle(workType) {
-    if (workType.startsWith('work') && workType.length > 4) {
-        const num = workType.substring(4);
-        return `Работа ${num}`;
-    }
-    if (workType.startsWith('check') && workType.length > 5) {
-        const num = workType.substring(5);
-        return `Проверка ${num}`;
-    }
-    if (workType.startsWith('explain') && workType.length > 7) {
-        const num = workType.substring(7);
-        return `Объяснение ${num}`;
-    }
-    
-    const titles = {
-        'work1': 'Работа 1', 'work2': 'Работа 2', 'work3': 'Работа 3',
-        'check1': 'Проверка 1', 'check2': 'Проверка 2', 'check3': 'Проверка 3',
-        'explain1': 'Объяснение 1', 'explain2': 'Объяснение 2', 'explain3': 'Объяснение 3'
-    };
-    return titles[workType] || workType;
-}
-
-function triggerWorkUpload(areaElement, student, workType) {
-    const fileInput = areaElement.querySelector('.file-input');
-    if (fileInput) {
-        fileInput.click();
-    }
-}
-
-function formatDateTime(timestamp) {
-    if (!timestamp) return '';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    
-    return `Загружено: ${day}.${month}.${year} ${hours}:${minutes}`;
-}
-
-// === ДОПОЛНИТЕЛЬНЫЕ РАБОТЫ ===
-async function saveAdditionalWorks(studentName, worksArray) {
-    try {
-        await db.collection('additionalWorks').doc(studentName).set({
-            works: worksArray,
-            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        document.getElementById("pastSimple").addEventListener("keydown", e => {
+            if (e.key === "Enter") document.getElementById("pastParticiple").focus();
         });
-        additionalWorks[studentName] = worksArray;
-        updateSyncStatus('✅ Доп. работы сохранены');
-    } catch (error) {
-        console.error('Ошибка сохранения доп. работ:', error);
-        additionalWorks[studentName] = worksArray;
-        localStorage.setItem('additionalWorks', JSON.stringify(additionalWorks));
-    }
-}
+        
+        document.getElementById("pastParticiple").addEventListener("keydown", e => {
+            if (e.key === "Enter") this.checkAnswer();
+        });
 
-function toggleAdditionalWorks(student, workType) {
-    const element = document.getElementById(`additionalWorks_${student}_${workType}`);
-    if (element) {
-        element.classList.toggle('active');
-        
-        const works = additionalWorks[student] || [];
-        const hasWorksOfType = works.filter(w => w.type === workType).length > 0;
-        
-        if (!hasWorksOfType && element.classList.contains('active')) {
-            addAdditionalWork(student, workType);
+        this.loadVerb();
+    }
+
+    shuffleVerbs() {
+        for (let i = this.verbs.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [this.verbs[i], this.verbs[j]] = [this.verbs[j], this.verbs[i]];
         }
     }
-}
 
-async function addAdditionalWork(studentName, workType) {
-    const works = additionalWorks[studentName] || [];
-    const newWorkNumber = works.filter(w => w.type === workType).length + 4;
-    works.push({
-        type: workType,
-        number: newWorkNumber,
-        name: `${getWorkTypeName(workType)} ${newWorkNumber}`
-    });
-    await saveAdditionalWorks(studentName, works);
-    if (currentSelectedStudent === studentName) {
-        initializeStudentWorks(studentName);
-    }
-}
-
-function getWorkTypeName(workType) {
-    switch(workType) {
-        case 'work': return 'Работа';
-        case 'check': return 'Проверка';
-        case 'explain': return 'Объяснение';
-        default: return workType;
-    }
-}
-
-function createAdditionalWorks(student, workType) {
-    const works = additionalWorks[student] || [];
-    const filteredWorks = works.filter(w => w.type === workType);
-    
-    if (filteredWorks.length === 0) {
-        return '<div style="text-align: center; color: #aaa; padding: 10px;">Нет дополнительных работ</div>';
-    }
-    
-    return `
-        <div class="works-row">
-            <div class="upload-areas">
-                ${filteredWorks.map(work => createWorkArea(student, `${workType}${work.number}`)).join('')}
-            </div>
-        </div>
-    `;
-}
-
-// === РАЗДЕЛ ПОМОЩИ ===
-async function loadHelpSections() {
-    try {
-        const snapshot = await db.collection('helpSections').get();
-        helpSectionsData = {};
+    loadVerb() {
+        const currentVerb = this.verbs[this.currentIndex];
+        const verbElement = document.getElementById("verb");
+        const translationElement = document.getElementById("translation");
+        const imageContainer = document.getElementById("verbImageContainer");
         
-        snapshot.forEach(doc => {
-            helpSectionsData[doc.id] = doc.data();
-        });
+        verbElement.textContent = currentVerb.base.toUpperCase();
+        translationElement.textContent = currentVerb.ru;
         
-        updateHelpUI();
-        
-    } catch (error) {
-        console.error('Ошибка загрузки разделов:', error);
-        helpSectionsData = JSON.parse(localStorage.getItem('helpSectionsData')) || {};
-    }
-}
-
-function updateHelpUI() {
-    const sectionsList = document.getElementById('sectionsList');
-    const helpSectionsView = document.getElementById('helpSectionsView');
-    
-    if (isHelpAdminMode && sectionsList) {
-        sectionsList.innerHTML = '';
-        
-        Object.entries(helpSectionsData).forEach(([id, section]) => {
-            const sectionDiv = document.createElement('div');
-            sectionDiv.className = `section-card ${currentSectionId === id ? 'active' : ''}`;
-            sectionDiv.innerHTML = `
-                <div class="section-title">${section.title || 'Без названия'}</div>
-                <div class="section-actions">
-                    <button class="edit-section-btn" onclick="editSection('${id}')">✏️</button>
-                    <button class="delete-section-btn" onclick="deleteSection('${id}')">🗑️</button>
-                </div>
-            `;
-            sectionDiv.onclick = () => editSection(id);
-            sectionsList.appendChild(sectionDiv);
-        });
-        
-        if (Object.keys(helpSectionsData).length === 0) {
-            sectionsList.innerHTML = '<p style="text-align: center; color: #aaa;">Нет разделов. Добавьте первый!</p>';
-        }
-    }
-    
-    if (!isHelpAdminMode && helpSectionsView) {
-        helpSectionsView.innerHTML = '';
-        
-        Object.entries(helpSectionsData).forEach(([id, section]) => {
-            const sectionDiv = document.createElement('div');
-            sectionDiv.className = 'section-view';
-            sectionDiv.innerHTML = `
-                <h3>${section.title || 'Без названия'}</h3>
-                <div class="section-content">${section.content || '<p style="color: #aaa;">Содержание пока не добавлено...</p>'}</div>
-            `;
-            helpSectionsView.appendChild(sectionDiv);
-        });
-        
-        if (Object.keys(helpSectionsData).length === 0) {
-            helpSectionsView.innerHTML = '<p style="text-align: center; color: #aaa; padding: 40px;">Инструкции пока не добавлены...</p>';
-        }
-    }
-}
-
-function toggleHelpMode() {
-    isHelpAdminMode = !isHelpAdminMode;
-    
-    const adminMode = document.getElementById('adminMode');
-    const studentMode = document.getElementById('studentMode');
-    const toggleBtn = document.getElementById('toggleModeBtn');
-    
-    if (adminMode && studentMode && toggleBtn) {
-        if (isHelpAdminMode) {
-            adminMode.style.display = 'block';
-            studentMode.style.display = 'none';
-            toggleBtn.textContent = '👀 Режим просмотра';
-            toggleBtn.style.backgroundColor = '#00ff00';
-            toggleBtn.style.color = '#000';
+        // Показываем изображение глагола, если есть
+        if (currentVerb.image) {
+            imageContainer.innerHTML = `<img src="${currentVerb.image}" alt="${currentVerb.base}" 
+                                          class="verb-image"
+                                          onerror="this.style.display='none'">`;
         } else {
-            adminMode.style.display = 'none';
-            studentMode.style.display = 'block';
-            toggleBtn.textContent = '🔧 Режим редактирования';
-            toggleBtn.style.backgroundColor = '';
-            toggleBtn.style.color = '';
+            imageContainer.innerHTML = '';
         }
-    }
-    
-    updateHelpUI();
-}
-
-function addNewSection() {
-    const modal = document.getElementById('sectionModal');
-    if (modal) {
-        modal.style.display = 'block';
-        const input = document.getElementById('sectionNameInput');
-        if (input) input.focus();
-    }
-}
-
-function closeSectionModal() {
-    const modal = document.getElementById('sectionModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    const input = document.getElementById('sectionNameInput');
-    if (input) {
-        input.value = '';
-    }
-}
-
-async function saveNewSection() {
-    const input = document.getElementById('sectionNameInput');
-    if (!input) return;
-    
-    const title = input.value.trim();
-    
-    if (!title) {
-        alert('Введите название раздела!');
-        return;
-    }
-    
-    try {
-        const id = 'section_' + Date.now();
-        const newSection = {
-            title: title,
-            content: '<p>Начните писать здесь...</p>',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
         
-        await db.collection('helpSections').doc(id).set(newSection);
-        helpSectionsData[id] = newSection;
-        
-        closeSectionModal();
-        updateHelpUI();
-        editSection(id);
-        
-        updateSyncStatus('✅ Раздел добавлен');
-        
-    } catch (error) {
-        console.error('Ошибка создания раздела:', error);
-        alert('Ошибка: ' + error.message);
+        document.getElementById("pastSimple").value = "";
+        document.getElementById("pastParticiple").value = "";
+        document.getElementById("result").textContent = "";
+        document.getElementById("pastSimple").focus();
+        this.startTimer();
     }
-}
 
-function editSection(sectionId) {
-    currentSectionId = sectionId;
-    const section = helpSectionsData[sectionId];
-    
-    const editorContainer = document.getElementById('editorContainer');
-    if (editorContainer) {
-        editorContainer.style.display = 'block';
-        editorContainer.innerHTML = createEditorHTML(section);
-        initEditor();
-    }
-    
-    updateHelpUI();
-}
-
-function createEditorHTML(section) {
-    return `
-        <h3 style="color: #00ff00; margin-bottom: 20px;">Редактирование: ${section?.title || 'Новый раздел'}</h3>
+    startTimer() {
+        clearInterval(this.timer);
+        this.timeLeft = 30;
+        document.getElementById("timer").textContent = this.timeLeft;
         
-        <div class="editor-toolbar" id="editorToolbar">
-            <button class="toolbar-btn" onclick="formatText('bold')" title="Жирный"><b>B</b></button>
-            <button class="toolbar-btn" onclick="formatText('italic')" title="Курсив"><i>I</i></button>
-            <button class="toolbar-btn" onclick="formatText('underline')" title="Подчеркнутый"><u>U</u></button>
-            <div style="width: 1px; background: #444; height: 30px;"></div>
-            <input type="color" class="color-picker" id="textColor" title="Цвет текста" onchange="changeTextColor(this.value)">
-            <div style="width: 1px; background: #444; height: 30px;"></div>
-            <button class="toolbar-btn" onclick="insertList('unordered')" title="Маркированный список">•</button>
-            <button class="toolbar-btn" onclick="insertList('ordered')" title="Нумерованный список">1.</button>
-            <button class="toolbar-btn" onclick="insertLink()" title="Ссылка">🔗</button>
-        </div>
-        
-        <div 
-            class="editor-content" 
-            id="editorContent" 
-            contenteditable="true"
-            oninput="updateEditorState()"
-        >${section?.content || '<p>Начните писать здесь...</p>'}</div>
-        
-        <div class="editor-buttons">
-            <button class="cancel-editor-btn" onclick="cancelEditing()">Отмена</button>
-            <button class="save-editor-btn" onclick="saveSectionContent()">💾 Сохранить</button>
-        </div>
-    `;
-}
-
-function initEditor() {
-    const editor = document.getElementById('editorContent');
-    if (editor) {
-        editor.focus();
-    }
-}
-
-function formatText(command) {
-    document.execCommand(command, false, null);
-    updateEditorState();
-}
-
-function changeTextColor(color) {
-    document.execCommand('foreColor', false, color);
-    updateEditorState();
-}
-
-function insertList(type) {
-    const command = type === 'unordered' ? 'insertUnorderedList' : 'insertOrderedList';
-    document.execCommand(command, false, null);
-    updateEditorState();
-}
-
-function insertLink() {
-    const url = prompt('Введите URL:', 'https://');
-    if (url) {
-        document.execCommand('createLink', false, url);
-        updateEditorState();
-    }
-}
-
-function updateEditorState() {
-    const toolbar = document.getElementById('editorToolbar');
-    if (toolbar) {
-        const commands = ['bold', 'italic', 'underline'];
-        commands.forEach(cmd => {
-            const btn = toolbar.querySelector(`[onclick*="${cmd}"]`);
-            if (btn) {
-                btn.classList.toggle('active', document.queryCommandState(cmd));
+        this.timer = setInterval(() => {
+            this.timeLeft--;
+            document.getElementById("timer").textContent = this.timeLeft;
+            
+            if (this.timeLeft <= 0) {
+                clearInterval(this.timer);
+                this.showResults();
             }
-        });
-    }
-}
-
-async function saveSectionContent() {
-    if (!currentSectionId) return;
-    
-    const editorContent = document.getElementById('editorContent');
-    if (!editorContent) return;
-    
-    const content = editorContent.innerHTML;
-    
-    try {
-        await db.collection('helpSections').doc(currentSectionId).update({
-            content: content,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        helpSectionsData[currentSectionId].content = content;
-        updateSyncStatus('✅ Раздел сохранен');
-        alert('Изменения сохранены!');
-        
-        updateHelpUI();
-        
-    } catch (error) {
-        console.error('Ошибка сохранения:', error);
-        alert('Ошибка: ' + error.message);
-    }
-}
-
-function cancelEditing() {
-    currentSectionId = null;
-    const editorContainer = document.getElementById('editorContainer');
-    if (editorContainer) {
-        editorContainer.style.display = 'none';
-    }
-    updateHelpUI();
-}
-
-async function deleteSection(sectionId) {
-    if (!confirm('Удалить этот раздел?')) return;
-    
-    try {
-        await db.collection('helpSections').doc(sectionId).delete();
-        delete helpSectionsData[sectionId];
-        
-        if (currentSectionId === sectionId) {
-            cancelEditing();
-        }
-        
-        updateHelpUI();
-        updateSyncStatus('✅ Раздел удален');
-        
-    } catch (error) {
-        console.error('Ошибка удаления:', error);
-        alert('Ошибка: ' + error.message);
-    }
-}
-
-// === ОБЩИЕ ФУНКЦИИ ===
-function openFullscreen(imageSrc) {
-    const modal = document.getElementById('imageModal');
-    const modalImg = document.getElementById('fullscreenImage');
-    
-    if (modal && modalImg) {
-        modal.style.display = 'block';
-        modalImg.src = imageSrc;
-        
-        modal.onclick = function(event) {
-            if (event.target === modal) {
-                closeModal();
-            }
-        };
-        
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') {
-                closeModal();
-            }
-        });
-    }
-}
-
-function closeModal() {
-    const modal = document.getElementById('imageModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// === ФУНКЦИИ ДЛЯ ПАРОЛЯ АДМИНКИ ===
-function showPasswordPage() {
-    const passwordPage = document.getElementById('passwordPage');
-    if (passwordPage) {
-        showPage('passwordPage');
-        const passwordInput = document.getElementById('adminPassword');
-        if (passwordInput) {
-            passwordInput.value = '';
-            passwordInput.focus();
-        }
-        const errorElement = document.getElementById('passwordError');
-        if (errorElement) {
-            errorElement.style.display = 'none';
-        }
-    }
-}
-
-function checkAdminPassword() {
-    const passwordInput = document.getElementById('adminPassword');
-    const errorElement = document.getElementById('passwordError');
-    
-    if (!passwordInput || !errorElement) return;
-    
-    const enteredPassword = passwordInput.value.trim();
-    const correctPassword = 'Adher357';
-    
-    if (enteredPassword === correctPassword) {
-        errorElement.style.display = 'none';
-        localStorage.setItem('adminAuthenticated', 'true');
-        showPage('adminPage');
-    } else {
-        errorElement.style.display = 'block';
-        passwordInput.value = '';
-        passwordInput.focus();
-        
-        passwordInput.style.borderColor = '#ff0000';
-        passwordInput.style.boxShadow = '0 0 10px rgba(255, 0, 0, 0.5)';
-        
-        setTimeout(() => {
-            passwordInput.style.borderColor = '#ff4444';
-            passwordInput.style.boxShadow = 'none';
         }, 1000);
     }
-}
 
-function checkAdminAuth() {
-    return localStorage.getItem('adminAuthenticated') === 'true';
-}
+    checkAnswer() {
+        const psInput = document.getElementById("pastSimple").value.trim().toLowerCase();
+        const ppInput = document.getElementById("pastParticiple").value.trim().toLowerCase();
+        const currentVerb = this.verbs[this.currentIndex];
 
-// ОБНОВЛЁННАЯ функция showPage с проверкой пароля
-function showPage(pageId) {
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    
-    const pageElement = document.getElementById(pageId);
-    if (pageElement) {
-        pageElement.classList.add('active');
-    }
-    
-    window.scrollTo(0, 0);
-    
-    if (pageId === 'worksPage') {
-        closeStudentWorks();
-    } else if (pageId === 'adminPage') {
-        if (!checkAdminAuth()) {
-            showPasswordPage();
-            return;
-        }
-        initializeAdminPage();
-    } else if (pageId === 'helpPage') {
-        loadHelpSections();
-    }
-}
+        const isPsCorrect = this.checkForm(psInput, currentVerb.past);
+        const isPpCorrect = this.checkForm(ppInput, currentVerb.participle);
+        const isCorrect = isPsCorrect && isPpCorrect;
 
-function closeStudentWorks() {
-    currentSelectedStudent = null;
-    const section = document.getElementById('studentWorksSection');
-    if (section) {
-        section.classList.remove('active');
-    }
-    initializeStudentsGrid();
-    const selectedStudentName = document.getElementById('selectedStudentName');
-    if (selectedStudentName) {
-        selectedStudentName.textContent = "📄 Ваши Работы";
-    }
-}
-// === ИНИЦИАЛИЗАЦИЯ ===
-document.addEventListener('DOMContentLoaded', async function() {
-    // Создаем глобальные функции
-    window.showPage = showPage;
-    window.openFullscreen = openFullscreen;
-    window.closeModal = closeModal;
-    window.handleWordInput = handleWordInput;
-    window.navigateWord = navigateWord;
-    window.removeCurrentWord = removeCurrentWord;
-    window.handleWorkUpload = handleWorkUpload;
-    window.triggerWorkUpload = triggerWorkUpload;
-    window.deleteWork = deleteWork;
-    window.toggleAdditionalWorks = toggleAdditionalWorks;
-    window.calculateTotals = calculateTotals;
-    window.saveWeekRankings = saveWeekRankings;
-    window.clearWeekRankings = clearWeekRankings;
-    window.toggleHelpMode = toggleHelpMode;
-    window.addNewSection = addNewSection;
-    window.closeSectionModal = closeSectionModal;
-    window.saveNewSection = saveNewSection;
-    window.formatText = formatText;
-    window.changeTextColor = changeTextColor;
-    window.insertList = insertList;
-    window.insertLink = insertLink;
-    window.updateEditorState = updateEditorState;
-    window.saveSectionContent = saveSectionContent;
-    window.cancelEditing = cancelEditing;
-    window.editSection = editSection;
-    window.deleteSection = deleteSection;
-    
-    await loadAllData();
-    
-    const savedWeek = localStorage.getItem('lastSelectedWeek');
-    if (savedWeek) {
-        currentSelectedWeek = savedWeek;
-    }
-    
-    initializeWeekRating(currentSelectedWeek);
-    
-    const weekSelector = document.getElementById('weekSelector');
-    if (weekSelector) {
-        if (currentSelectedWeek) {
-            weekSelector.value = currentSelectedWeek;
-        }
+        this.saveResult(isCorrect);
         
-        weekSelector.addEventListener('change', function() {
-            const weekId = this.value;
-            currentSelectedWeek = weekId;
-            localStorage.setItem('lastSelectedWeek', weekId);
-            
-            loadWeekRankings(weekId);
-            initializeWeekRating(weekId);
+        if (isCorrect) {
+            this.currentIndex++;
+            if (this.currentIndex < this.verbs.length) {
+                this.loadVerb();
+            } else {
+                const correctAnswers = this.results.filter(r => r.correct).length;
+                if (correctAnswers === this.verbs.length) {
+                    this.showCompletionModal(true, true);
+                } else {
+                    this.showCompletionModal(false, true);
+                }
+            }
+        } else {
+            this.showCompletionModal(false, true);
+        }
+    }
+
+    checkForm(input, correctForms) {
+        const formsArray = correctForms.toLowerCase().split(' ').map(f => f.trim());
+        if (correctForms.toLowerCase().includes(' ')) {
+            formsArray.push(correctForms.toLowerCase());
+        }
+        return formsArray.includes(input);
+    }
+
+    saveResult(correct) {
+        const currentVerb = this.verbs[this.currentIndex];
+        this.results.push({
+            verb: currentVerb.base,
+            correct: correct,
+            yourPs: document.getElementById("pastSimple").value.trim() || "-",
+            yourPp: document.getElementById("pastParticiple").value.trim() || "-",
+            correctPs: currentVerb.past,
+            correctPp: currentVerb.participle,
+            ru: currentVerb.ru,
+            image: currentVerb.image
         });
     }
-    
+
+    showCompletionModal(allCorrectForMessage, showResultsAfterConfirm) {
+        clearInterval(this.timer);
+        const messages = allCorrectForMessage ? allCorrectMessages : notAllCorrectMessages;
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        const modal = document.getElementById("myModal");
+        const modalMessage = document.getElementById("modalMessage");
+        const modalOkBtn = document.getElementById("modalOkBtn");
+
+        modalMessage.textContent = randomMessage;
+        modal.style.display = "flex";
+
+        const closeModal = () => {
+            modal.style.display = "none";
+            if (showResultsAfterConfirm) {
+                this.showResults();
+            } else {
+                this.loadVerb();
+            }
+        };
+
+        modalOkBtn.onclick = closeModal;
+
+        const keyHandler = (e) => {
+            if (e.key === "Enter") {
+                closeModal();
+                modal.removeEventListener("keydown", keyHandler);
+            }
+        };
+
+        modal.addEventListener("keydown", keyHandler);
+        setTimeout(() => modalOkBtn.focus(), 100);
+    }
+
+    async showResults() {
+        clearInterval(this.timer);
+        const total = this.verbs.length;
+        const correct = this.results.filter(r => r.correct).length;
+        const percent = Math.round((correct / total) * 100) || 0;
+        const now = new Date();
+        const gameEndTime = Date.now();
+        const timeTakenMs = gameEndTime - this.gameStartTime;
+        
+        const minutes = Math.floor(timeTakenMs / 60000);
+        const seconds = ((timeTakenMs % 60000) / 1000).toFixed(0);
+        const formattedTime = `${minutes}m ${seconds < 10 ? '0' : ''}${seconds}s`;
+        const gameTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+        // Обновляем статистику пользователя
+        this.userData.totalGames = (this.userData.totalGames || 0) + 1;
+        this.userData.totalCorrect = (this.userData.totalCorrect || 0) + correct;
+        
+        // Добавляем запись о текущей игре
+        this.userData.records.push({
+            correct,
+            total,
+            percent,
+            date: now.toLocaleDateString(),
+            gameTime: gameTime,
+            time: formattedTime,
+            group: verbGroups[this.currentVerbGroupKey].name
+        });
+
+        // Проверяем достижения
+        this.checkAchievements(correct, total);
+        
+        // Сохраняем данные пользователя
+        await this.saveUserData();
+
+        let html = `
+            <div class="user-profile">
+                <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
+                     onerror="this.src='https://via.placeholder.com/100'">
+                <div class="user-info">
+                    <div class="user-nickname">${this.userData.nickname}</div>
+                </div>
+            </div>
+            
+            <h1 class="results-header">Results</h1>
+            <div class="stats">
+                <p class="player-name">Player: ${this.userData.nickname}</p>
+                <p class="answered-count">You answered: ${this.results.length} verbs</p>
+                <p class="correct-answers">Correct answers: <span class="correct-number">${correct}</span>/<span class="total-number">${total}</span></p>
+                <p class="success-rate">Success rate: ${percent}%</p>
+                <p>Time Taken: ${formattedTime}</p>
+            </div>
+            <div class="table-container">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Verb</th>
+                            <th>Image</th>
+                            <th>Your Past</th>
+                            <th>Your Part.</th>
+                            <th>Correct Past</th>
+                            <th>Correct Part.</th>
+                            <th>Translation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        this.results.forEach(r => {
+            const psClass = this.checkForm(r.yourPs.toLowerCase(), r.correctPs) ? 'correct' : 'wrong';
+            const ppClass = this.checkForm(r.yourPp.toLowerCase(), r.correctPp) ? 'correct' : 'wrong';
+            
+            const correctPsButtons = r.correctPs.split(' ').map(part => 
+                `<button class="play-table-audio-btn" data-word="${part}"></button>`
+            ).join('');
+            
+            const correctPpButtons = r.correctPp.split(' ').map(part => 
+                `<button class="play-table-audio-btn" data-word="${part}"></button>`
+            ).join('');
+
+            html += `
+                <tr>
+                    <td>${r.verb} <button class="play-table-audio-btn" data-word="${r.verb}"></button></td>
+                    <td>${r.image ? `<img src="${r.image}" alt="${r.verb}" style="width: 50px; height: 40px; object-fit: cover; border-radius: 5px;" onerror="this.style.display='none'">` : ''}</td>
+                    <td class="${psClass}">${r.yourPs}</td>
+                    <td class="${ppClass}">${r.yourPp}</td>
+                    <td>${r.correctPs} ${correctPsButtons}</td>
+                    <td>${r.correctPp} ${correctPpButtons}</td>
+                    <td>${r.ru}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+            <button class="restart-btn" id="restartBtn">Play Again</button>
+            <button class="restart-btn" id="mainMenuBtn" style="background: #9c27b0; margin-left: 10px;">Main Menu</button>
+            
+            ${this.getLeaderboardHTML()}
+            ${this.getAchievementsHTML()}
+        `;
+
+        document.getElementById("mainContainer").innerHTML = html;
+        
+        document.querySelectorAll('.play-table-audio-btn').forEach(button => {
+            button.addEventListener('click', (event) => {
+                const wordToSpeak = event.target.dataset.word;
+                this.playSpeech(wordToSpeak);
+            });
+        });
+
+        document.getElementById("restartBtn").addEventListener("click", () => {
+            this.startGame(this.currentVerbGroupKey);
+        });
+
+        document.getElementById("mainMenuBtn").addEventListener("click", () => {
+            this.showMainScreen();
+        });
+
+        setTimeout(() => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 100);
+    }
+
+    async getLeaderboardHTML() {
+        try {
+            const snapshot = await database.ref('users').once('value');
+            const users = snapshot.val();
+            const allScores = [];
+
+            for (const userId in users) {
+                const user = users[userId];
+                const records = user.records || [];
+                
+                records.forEach(record => {
+                    allScores.push({
+                        name: user.nickname || 'Anonymous',
+                        avatar: user.avatarUrl || 'https://via.placeholder.com/100',
+                        correct: record.correct || 0,
+                        total: record.total || 0,
+                        percent: record.percent || 0,
+                        date: record.date || 'N/A',
+                        gameTime: record.gameTime || 'N/A',
+                        time: record.time || 'N/A',
+                        group: record.group || 'N/A'
+                    });
+                });
+            }
+
+            allScores.sort((a, b) => {
+                if (b.percent !== a.percent) return b.percent - a.percent;
+                if (b.correct !== a.correct) return b.correct - a.correct;
+                
+                const timeToSeconds = (timeStr) => {
+                    if (timeStr === 'N/A') return Infinity;
+                    const parts = timeStr.match(/(\d+)m\s*(\d+)s/);
+                    if (parts) {
+                        return parseInt(parts[1]) * 60 + parseInt(parts[2]);
+                    }
+                    return Infinity;
+                };
+                return timeToSeconds(a.time) - timeToSeconds(b.time);
+            });
+
+            let lbHtml = '<div class="leaderboard">';
+            lbHtml += '<div class="leaderboard-title">LEADERBOARD</div>';
+            
+            if (allScores.length === 0) {
+                lbHtml += '<p>No results yet.</p>';
+            } else {
+                lbHtml += '<ol>';
+                allScores.slice(0, 10).forEach((p, index) => {
+                    lbHtml += `
+                        <li style="display: flex; align-items: center; gap: 10px; margin: 10px 0;">
+                            <span style="font-weight: bold; color: gold;">${index + 1}.</span>
+                            <img src="${p.avatar}" alt="${p.name}" style="width: 30px; height: 30px; border-radius: 50%; object-fit: cover;"
+                                 onerror="this.src='https://via.placeholder.com/30'">
+                            <strong>${p.name}</strong> (${p.group}): ${p.correct}/${p.total} (${p.percent}%) — ${p.date} ${p.gameTime} (${p.time})
+                        </li>
+                    `;
+                });
+                lbHtml += '</ol>';
+            }
+            lbHtml += '</div>';
+            
+            return lbHtml;
+            
+        } catch (error) {
+            console.error("Error loading leaderboard:", error);
+            return '<div class="leaderboard"><p>Error loading leaderboard</p></div>';
+        }
+    }
+
+    getAchievementsHTML() {
+        const playerAchievements = this.userData ? (this.userData.achievements || {}) : {};
+        
+        let html = `
+            <div class="achievements">
+                <div class="achievements-title">My Achievements</div>
+                <div class="achievement-list">
+        `;
+
+        for (const key in achievements) {
+            const achievement = achievements[key];
+            const isUnlocked = playerAchievements[key];
+            html += `
+                <div class="achievement-item ${isUnlocked ? 'unlocked' : ''}">
+                    <span class="achievement-icon">${achievement.icon}</span>
+                    <div class="achievement-name">${achievement.name}</div>
+                    <div class="achievement-description">${achievement.description}</div>
+                </div>
+            `;
+        }
+
+        html += `
+                </div>
+            </div>
+        `;
+        return html;
+    }
+
+    checkAchievements(correctAnswers, totalAnswers) {
+        if (!this.userData) return;
+
+        let newAchievementUnlocked = false;
+
+        if (!this.userData.achievements.novice) {
+            this.userData.achievements.novice = true;
+            this.showAchievementNotification(achievements.novice.name, achievements.novice.icon);
+            newAchievementUnlocked = true;
+        }
+
+        if (correctAnswers === totalAnswers) {
+            const groupAchievementKey = `master_${this.currentVerbGroupKey}`;
+            if (achievements[groupAchievementKey] && !this.userData.achievements[groupAchievementKey]) {
+                this.userData.achievements[groupAchievementKey] = true;
+                this.showAchievementNotification(achievements[groupAchievementKey].name, achievements[groupAchievementKey].icon);
+                newAchievementUnlocked = true;
+            }
+        }
+    }
+
+    showAchievementNotification(name, icon) {
+        const notificationContainer = document.getElementById('achievementNotificationContainer');
+        const notificationDiv = document.createElement('div');
+        notificationDiv.className = 'achievement-notification';
+        notificationDiv.innerHTML = `<strong>${icon} Achievement Unlocked! ${icon}</strong><br>${name}`;
+        
+        notificationContainer.appendChild(notificationDiv);
+
+        setTimeout(() => {
+            notificationDiv.remove();
+        }, 2500);
+    }
+}
+
+// Инициализация приложения при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    const trainer = new VerbsTrainer();
+});
