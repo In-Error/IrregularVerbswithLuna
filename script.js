@@ -120,13 +120,18 @@ class VerbsTrainer {
         this.currentUser = user;
         this.loadUserData();
       } else {
-        this.currentUser = null;
-        this.userData = null;
-        this.showAuthScreen();
-      }
-    });
-  }
-
+  // Гостевой режим
+  this.currentUser = { uid: "guest_" + Date.now() };
+  this.userData = {
+    nickname: "Guest",
+    avatarUrl: "https://via.placeholder.com/100",
+    records: [],
+    achievements: {},
+    totalGames: 0,
+    totalCorrect: 0
+  };
+  this.showMainScreen();
+}
   async loadUserData() {
     try {
       const doc = await db.collection('users').doc(this.currentUser.uid).get();
