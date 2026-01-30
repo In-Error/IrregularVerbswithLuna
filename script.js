@@ -356,7 +356,7 @@ class VerbsTrainer {
     }, 0);
   }
 
-  sstartGame(groupKey) {
+  startGame(groupKey) {
     // КРИТИЧЕСКИ ВАЖНО: сбросить состояние
     this.currentVerbGroupKey = groupKey;
     this.verbs = [...verbGroups[groupKey].verbs];
