@@ -361,52 +361,56 @@ class VerbsTrainer {
   }
 
   startGame(groupKey) {
-    // Начинаем новую игру с чистого состояния
-    this.currentVerbGroupKey = groupKey;
-    this.verbs = [...verbGroups[groupKey].verbs];
-    this.results = [];
-    this.currentIndex = 0;
-    this.timeLeft = 30;
-    clearInterval(this.timer);
+  // Очистка предыдущих обработчиков
+  const pastSimple = document.getElementById("pastSimple");
+  const pastParticiple = document.getElementById("pastParticiple");
+  
+  if (pastSimple) pastSimple.replaceWith(pastSimple.cloneNode(true));
+  if (pastParticiple) pastParticiple.replaceWith(pastParticiple.cloneNode(true));
+
+  // Сброс состояния
+  this.currentVerbGroupKey = groupKey;
+  this.verbs = [...verbGroups[groupKey].verbs];
+  this.results = [];
+  this.currentIndex = 0;
+  this.gameStartTime = Date.now();
+
+  document.getElementById("mainContainer").innerHTML = `
+    <div class="user-profile">
+      <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
+           onerror="this.src='https://via.placeholder.com/100'">
+      <div class="user-info">
+        <div class="user-nickname">${this.userData.nickname}</div>
+      </div>
+    </div>
     
-    this.shuffleVerbs();
-    this.gameStartTime = Date.now();
-
-    document.getElementById("mainContainer").innerHTML = `
-      <div class="user-profile">
-        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
-             onerror="this.src='https://via.placeholder.com/100'">
-        <div class="user-info">
-          <div class="user-nickname">${this.userData.nickname}</div>
-        </div>
-      </div>
-      
-      <h1>Hi, ${this.userData.nickname}!</h1>
-      <div class="timer">Time left: <span id="timer">30</span> sec</div>
-      
-      <div class="verb-container">
-        <div id="verbImageContainer"></div>
-        <div class="verb" id="verb"></div>
-      </div>
-      
-      <div class="translation" id="translation"></div>
-      <div class="inputs">
-        <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-        <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      </div>
-      <p class="result" id="result"></p>
-    `;
-
-    document.getElementById("pastSimple").addEventListener("keydown", e => {
-      if (e.key === "Enter") document.getElementById("pastParticiple").focus();
-    });
+    <h1>Hi, ${this.userData.nickname}!</h1>
+    <div class="timer">Time left: <span id="timer">30</span> sec</div>
     
-    document.getElementById("pastParticiple").addEventListener("keydown", e => {
-      if (e.key === "Enter") this.checkAnswer();
-    });
+    <div class="verb-container">
+      <div id="verbImageContainer"></div>
+      <div class="verb" id="verb"></div>
+    </div>
+    
+    <div class="translation" id="translation"></div>
+    <div class="inputs">
+      <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+    </div>
+    <p class="result" id="result"></p>
+  `;
 
-    this.loadVerb();
-  }
+  // Новые обработчики
+  document.getElementById("pastSimple").addEventListener("keydown", e => {
+    if (e.key === "Enter") document.getElementById("pastParticiple").focus();
+  });
+  
+  document.getElementById("pastParticiple").addEventListener("keydown", e => {
+    if (e.key === "Enter") this.checkAnswer();
+  });
+
+  this.loadVerb();
+}
 
   shuffleVerbs() {
     for (let i = this.verbs.length - 1; i > 0; i--) {
