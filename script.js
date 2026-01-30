@@ -215,7 +215,7 @@ class VerbsTrainer {
     this.currentVerbGroupKey = null;
     this.verbs = [];
     this.currentIndex = 0;
-    this.timeLeft = 30;
+    this.timeLeft = 30; 
     this.timer = null;
     this.results = [];
     this.gameStartTime = null;
@@ -295,8 +295,17 @@ class VerbsTrainer {
   }
 
   showMainScreen() {
+    // КРИТИЧЕСКИ ВАЖНО: сбросить состояние игры при возврате в главное меню
+    this.currentVerbGroupKey = null;
+    this.verbs = [];
+    this.results = [];
+    this.currentIndex = 0;
+    clearInterval(this.timer);
+    this.timeLeft = 30;
+
     const lastVerbGroupKey = localStorage.getItem('lastVerbGroupKey') || 'common1';
     const container = document.getElementById("mainContainer");
+    
     container.innerHTML = `
       <div class="user-profile">
         <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
@@ -327,27 +336,34 @@ class VerbsTrainer {
       ${this.getAchievementsHTML()}
     `;
 
-    document.getElementById("mainMenuBtn").addEventListener("click", () => {
-  // Сбрасываем всё состояние
-  this.currentVerbGroupKey = null;
-  this.verbs = [];
-  this.results = [];
-  this.currentIndex = 0;
-  clearInterval(this.timer);
-  this.showMainScreen();
-});
+    // Добавляем слушатели ПОСЛЕ того, как HTML добавлен в DOM
+    setTimeout(() => {
+      document.getElementById("startBtn").addEventListener("click", () => {
+        const selectedGroup = document.getElementById("verbGroup").value;
+        localStorage.setItem('lastVerbGroupKey', selectedGroup);
+        this.startGame(selectedGroup);
+      });
 
-    document.getElementById("backToStudentsBtn").addEventListener("click", () => {
-      this.showStudentSelect();
-    });
+      document.getElementById("backToStudentsBtn").addEventListener("click", () => {
+        // Также сбрасываем состояние при возврате к списку учеников
+        this.currentVerbGroupKey = null;
+        this.verbs = [];
+        this.results = [];
+        this.currentIndex = 0;
+        clearInterval(this.timer);
+        this.showStudentSelect();
+      });
+    }, 0);
   }
 
-  startGame(groupKey) {
+  sstartGame(groupKey) {
     // КРИТИЧЕСКИ ВАЖНО: сбросить состояние
     this.currentVerbGroupKey = groupKey;
     this.verbs = [...verbGroups[groupKey].verbs];
     this.results = []; // ← очищаем результаты
     this.currentIndex = 0; // ← сбрасываем индекс
+    this.timeLeft = 30; // ← ДОБАВЛЯЕМ ЭТУ СТРОКУ!
+    clearInterval(this.timer); // ← ДОБАВЛЯЕМ ЭТУ СТРОКУ!
     
     this.shuffleVerbs();
     this.gameStartTime = Date.now();
