@@ -295,7 +295,7 @@ class VerbsTrainer {
   }
 
   showMainScreen() {
-    // КРИТИЧЕСКИ ВАЖНО: сбросить состояние игры при возврате в главное меню
+    // Сбрасываем состояние игры
     this.currentVerbGroupKey = null;
     this.verbs = [];
     this.results = [];
@@ -336,34 +336,38 @@ class VerbsTrainer {
       ${this.getAchievementsHTML()}
     `;
 
-    // Добавляем слушатели ПОСЛЕ того, как HTML добавлен в DOM
-    setTimeout(() => {
-      document.getElementById("startBtn").addEventListener("click", () => {
+    // Используем простой onclick для надежности
+    const startBtn = document.getElementById("startBtn");
+    const backBtn = document.getElementById("backToStudentsBtn");
+    
+    if (startBtn) {
+      startBtn.onclick = () => {
         const selectedGroup = document.getElementById("verbGroup").value;
         localStorage.setItem('lastVerbGroupKey', selectedGroup);
         this.startGame(selectedGroup);
-      });
-
-      document.getElementById("backToStudentsBtn").addEventListener("click", () => {
-        // Также сбрасываем состояние при возврате к списку учеников
+      };
+    }
+    
+    if (backBtn) {
+      backBtn.onclick = () => {
         this.currentVerbGroupKey = null;
         this.verbs = [];
         this.results = [];
         this.currentIndex = 0;
         clearInterval(this.timer);
         this.showStudentSelect();
-      });
-    }, 0);
+      };
+    }
   }
 
   startGame(groupKey) {
-    // КРИТИЧЕСКИ ВАЖНО: сбросить состояние
+    // Начинаем новую игру с чистого состояния
     this.currentVerbGroupKey = groupKey;
     this.verbs = [...verbGroups[groupKey].verbs];
-    this.results = []; // ← очищаем результаты
-    this.currentIndex = 0; // ← сбрасываем индекс
-    this.timeLeft = 30; // ← ДОБАВЛЯЕМ ЭТУ СТРОКУ!
-    clearInterval(this.timer); // ← ДОБАВЛЯЕМ ЭТУ СТРОКУ!
+    this.results = [];
+    this.currentIndex = 0;
+    this.timeLeft = 30;
+    clearInterval(this.timer);
     
     this.shuffleVerbs();
     this.gameStartTime = Date.now();
@@ -452,39 +456,37 @@ class VerbsTrainer {
   }
 
   checkAnswer() {
-  const psInput = document.getElementById("pastSimple").value.trim().toLowerCase();
-  const ppInput = document.getElementById("pastParticiple").value.trim().toLowerCase();
-  const currentVerb = this.verbs[this.currentIndex];
+    const psInput = document.getElementById("pastSimple").value.trim().toLowerCase();
+    const ppInput = document.getElementById("pastParticiple").value.trim().toLowerCase();
+    const currentVerb = this.verbs[this.currentIndex];
 
-  // Защита от undefined
-  if (!currentVerb) {
-    this.showResults();
-    return;
-  }
-
-  const isPsCorrect = this.checkForm(psInput, currentVerb.past);
-  const isPpCorrect = this.checkForm(ppInput, currentVerb.participle);
-  const isCorrect = isPsCorrect && isPpCorrect;
-
-  // Сохраняем результат ТОЛЬКО если глагол существует
-  this.saveResult(isCorrect);
-
-  if (isCorrect) {
-    this.currentIndex++;
-    if (this.currentIndex < this.verbs.length) {
-      this.loadVerb();
-    } else {
-      const correctAnswers = this.results.filter(r => r.correct).length;
-      if (correctAnswers === this.verbs.length) {
-        this.showCompletionModal(true, true);
-      } else {
-        this.showCompletionModal(false, true);
-      }
+    if (!currentVerb) {
+      this.showResults();
+      return;
     }
-  } else {
-    this.showCompletionModal(false, true);
+
+    const isPsCorrect = this.checkForm(psInput, currentVerb.past);
+    const isPpCorrect = this.checkForm(ppInput, currentVerb.participle);
+    const isCorrect = isPsCorrect && isPpCorrect;
+
+    this.saveResult(isCorrect);
+
+    if (isCorrect) {
+      this.currentIndex++;
+      if (this.currentIndex < this.verbs.length) {
+        this.loadVerb();
+      } else {
+        const correctAnswers = this.results.filter(r => r.correct).length;
+        if (correctAnswers === this.verbs.length) {
+          this.showCompletionModal(true, true);
+        } else {
+          this.showCompletionModal(false, true);
+        }
+      }
+    } else {
+      this.showCompletionModal(false, true);
+    }
   }
-}
 
   checkForm(input, correctForms) {
     const formsArray = correctForms.toLowerCase().split(' ').map(f => f.trim());
