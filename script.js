@@ -361,39 +361,29 @@ class VerbsTrainer {
   }
 
   startGame(groupKey) {
-  // Очистка предыдущих обработчиков
-  const pastSimple = document.getElementById("pastSimple");
-  const pastParticiple = document.getElementById("pastParticiple");
-  
-  if (pastSimple) pastSimple.replaceWith(pastSimple.cloneNode(true));
-  if (pastParticiple) pastParticiple.replaceWith(pastParticiple.cloneNode(true));
+  // Полная очистка — убираем всё, включая старые обработчики
+  document.getElementById("mainContainer").innerHTML = '';
 
   // Сброс состояния
   this.currentVerbGroupKey = groupKey;
   this.verbs = [...verbGroups[groupKey].verbs];
-this.results = [];
-if (this.timer) clearInterval(this.timer);
-this.timer = null;
-this.currentIndex = 0;
+  this.results = [];
+  this.currentIndex = 0; // ← критически важно: до создания HTML!
   this.gameStartTime = Date.now();
 
+  if (this.timer) clearInterval(this.timer);
+  this.timer = null;
+
+  // Создание новой разметки
   document.getElementById("mainContainer").innerHTML = `
-    <div class="user-profile">
-      <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
-           onerror="this.src='https://via.placeholder.com/100'">
-      <div class="user-info">
-        <div class="user-nickname">${this.userData.nickname}</div>
-      </div>
-    </div>
-    
     <h1>Hi, ${this.userData.nickname}!</h1>
     <div class="timer">Time left: <span id="timer">30</span> sec</div>
-    
+
     <div class="verb-container">
       <div id="verbImageContainer"></div>
       <div class="verb" id="verb"></div>
     </div>
-    
+
     <div class="translation" id="translation"></div>
     <div class="inputs">
       <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
@@ -406,7 +396,6 @@ this.currentIndex = 0;
   document.getElementById("pastSimple").addEventListener("keydown", e => {
     if (e.key === "Enter") document.getElementById("pastParticiple").focus();
   });
-  
   document.getElementById("pastParticiple").addEventListener("keydown", e => {
     if (e.key === "Enter") this.checkAnswer();
   });
