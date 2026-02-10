@@ -371,6 +371,7 @@ class VerbsTrainer {
   // Сброс состояния
   this.currentVerbGroupKey = groupKey;
   this.verbs = [...verbGroups[groupKey].verbs];
+    if (this.timer) clearInterval(this.timer);
   this.results = [];
   this.currentIndex = 0;
   this.gameStartTime = Date.now();
