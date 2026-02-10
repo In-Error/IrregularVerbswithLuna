@@ -622,8 +622,8 @@ class VerbsTrainer {
     });
 
     document.getElementById("mainMenuBtn").addEventListener("click", () => {
-  trainer = new VerbsTrainer();
-});
+      this.showMainScreen();
+    });
 
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
