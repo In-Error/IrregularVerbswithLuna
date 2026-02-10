@@ -790,3 +790,9 @@ input:focus, select:focus {
     font-size: 1.1rem;
   }
 }
+/* Убираем курсив у русского перевода на мобильных */
+@media (max-width: 600px) {
+  .translation {
+    font-style: normal;
+  }
+}
