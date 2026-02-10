@@ -796,4 +796,8 @@ input:focus, select:focus {
     font-style: normal !important;
     font-family: 'Fredoka', sans-serif !important;
   }
+    results-table td:nth-child(7) {
+  font-style: normal !important;
+  font-family: 'Fredoka', sans-serif !important;
+}
 }
