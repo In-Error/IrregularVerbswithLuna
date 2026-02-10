@@ -1,7 +1,7 @@
 // Firebase уже инициализирован в index.html
 const database = window.database;
 
-// === СПИСОК УЧЕНИКОВ (убраны лишние пробелы) ===
+// === СПИСОК УЧЕНИКОВ (без пробелов!) ===
 const students = [
   { id: "alina", name: "Alina", avatar: "avatars/alina.png" },
   { id: "artem", name: "Artem", avatar: "avatars/artem.png" },
@@ -13,7 +13,7 @@ const students = [
   { id: "vika", name: "Vika", avatar: "avatars/vika.png" }
 ];
 
-// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132, без пробелов в конце) ===
+// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132, без пробелов!) ===
 const verbs = [
   { base: "arise", past: "arose", participle: "arisen", ru: "возникать", image: "https://picsum.photos/200/150?random=1" },
   { base: "awake", past: "awoke", participle: "awoken", ru: "просыпаться", image: "https://picsum.photos/200/150?random=2" },
@@ -173,19 +173,19 @@ const allCorrectMessages = [
   "Wow, cool! Jump to the next training!",
   "Yay! The next training is calling you - go, go, go!",
   "Great! Run to the next one, superhero!",
-  "Nice! The next training is waiting - don't be lazy!",
-  "Hooray! Show the next training who's the boss!",
-  "Awesome! One more training and you'll be a star!",
-  "Good job! Next level - let's go!",
-  "Wow! The next training can't wait for you!"
+  "Nice! The next training is waiting - don’t be lazy!",
+  "Hooray! Show the next training who’s the boss!",
+  "Awesome! One more training and you’ll be a star!",
+  "Good job! Next level - let’s go!",
+  "Wow! The next training can’t wait for you!"
 ];
 const notAllCorrectMessages = [
-  "Almost there! Next time you'll be the champion!",
-  "Good try! You're getting better and better!",
-  "Nice work! A little more practice - and you'll smash it!",
-  "You're awesome anyway! Try again and win next time!",
-  "So close! One more go and you'll get it!",
-  "Don't worry! Even superheroes train a lot!",
+  "Almost there! Next time you’ll be the champion!",
+  "Good try! You’re getting better and better!",
+  "Nice work! A little more practice - and you’ll smash it!",
+  "You’re awesome anyway! Try again and win next time!",
+  "So close! One more go and you’ll get it!",
+  "Don’t worry! Even superheroes train a lot!",
   "Great effort! The top score is waiting for you!",
   "Keep going! Every try makes you stronger!"
 ];
@@ -257,12 +257,6 @@ class VerbsTrainer {
   }
 
   async selectStudent(studentId) {
-    // 🔥 ДОБАВЛЕНО: Сбрасываем таймер при выборе ученика
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-    
     const student = students.find(s => s.id === studentId);
     if (!student) return;
     this.currentStudentId = studentId;
@@ -304,21 +298,18 @@ class VerbsTrainer {
   }
 
   showMainScreen() {
-    // 🔥 ДОБАВЛЕНО: Сбрасываем все игровые переменные
+    // 🔥 Полная очистка контейнера — удаляем всё!
+    document.getElementById("mainContainer").innerHTML = '';
+
     this.currentVerbGroupKey = null;
     this.verbs = [];
     this.results = [];
     this.currentIndex = 0;
-    this.timeLeft = 30;
-    
-    // 🔥 ДОБАВЛЕНО: Останавливаем таймер, если он работает
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
     }
-    
-    // 🔥 Полная очистка контейнера
-    document.getElementById("mainContainer").innerHTML = '';
+    this.timeLeft = 30;
 
     const lastVerbGroupKey = localStorage.getItem('lastVerbGroupKey') || 'common1';
     const container = document.getElementById("mainContainer");
@@ -364,13 +355,7 @@ class VerbsTrainer {
   }
 
   startGame(groupKey) {
-    // 🔥 ДОБАВЛЕНО: Сбрасываем таймер перед началом новой игры
-    if (this.timer) {
-      clearInterval(this.timer);
-      this.timer = null;
-    }
-    
-    // 🔥 Полная очистка контейнера
+    // 🔥 Полная очистка — гарантирует отсутствие "призраков"
     document.getElementById("mainContainer").innerHTML = '';
 
     this.currentVerbGroupKey = groupKey;
@@ -378,8 +363,12 @@ class VerbsTrainer {
     this.verbs = shuffleArray([...verbGroups[groupKey].verbs]);
     this.results = [];
     this.currentIndex = 0;
-    this.timeLeft = 30; // 🔥 Сбрасываем время
     this.gameStartTime = Date.now();
+
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
 
     document.getElementById("mainContainer").innerHTML = `
       <h1>Hi, ${this.userData.nickname}!</h1>
@@ -398,12 +387,17 @@ class VerbsTrainer {
       <p class="result" id="result"></p>
     `;
 
-    document.getElementById("pastSimple").addEventListener("keydown", e => {
-      if (e.key === "Enter") document.getElementById("pastParticiple").focus();
-    });
-    document.getElementById("pastParticiple").addEventListener("keydown", e => {
+    // Используем onkeydown для надёжной замены обработчиков
+    const psInput = document.getElementById("pastSimple");
+    const ppInput = document.getElementById("pastParticiple");
+
+    psInput.onkeydown = (e) => {
+      if (e.key === "Enter") ppInput.focus();
+    };
+
+    ppInput.onkeydown = (e) => {
       if (e.key === "Enter") this.checkAnswer();
-    });
+    };
 
     this.loadVerb();
   }
@@ -697,4 +691,3 @@ let trainer;
 document.addEventListener('DOMContentLoaded', () => {
   trainer = new VerbsTrainer();
 });
-[file content end]
