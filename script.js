@@ -1,7 +1,7 @@
 // Firebase уже инициализирован в index.html
 const database = window.database;
 
-// === СПИСОК УЧЕНИКОВ (без пробелов!) ===
+// === СПИСОК УЧЕНИКОВ (убраны лишние пробелы) ===
 const students = [
   { id: "alina", name: "Alina", avatar: "avatars/alina.png" },
   { id: "artem", name: "Artem", avatar: "avatars/artem.png" },
@@ -13,7 +13,7 @@ const students = [
   { id: "vika", name: "Vika", avatar: "avatars/vika.png" }
 ];
 
-// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132, без пробелов!) ===
+// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132, без пробелов в конце) ===
 const verbs = [
   { base: "arise", past: "arose", participle: "arisen", ru: "возникать", image: "https://picsum.photos/200/150?random=1" },
   { base: "awake", past: "awoke", participle: "awoken", ru: "просыпаться", image: "https://picsum.photos/200/150?random=2" },
@@ -387,17 +387,12 @@ class VerbsTrainer {
       <p class="result" id="result"></p>
     `;
 
-    // Используем onkeydown для надёжной замены обработчиков
-    const psInput = document.getElementById("pastSimple");
-    const ppInput = document.getElementById("pastParticiple");
-
-    psInput.onkeydown = (e) => {
-      if (e.key === "Enter") ppInput.focus();
-    };
-
-    ppInput.onkeydown = (e) => {
+    document.getElementById("pastSimple").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("pastParticiple").focus();
+    });
+    document.getElementById("pastParticiple").addEventListener("keydown", e => {
       if (e.key === "Enter") this.checkAnswer();
-    };
+    });
 
     this.loadVerb();
   }
