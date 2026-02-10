@@ -350,32 +350,39 @@ class VerbsTrainer {
     
     if (backBtn) {
       backBtn.onclick = () => {
-        this.currentVerbGroupKey = null;
-        this.verbs = [];
-        this.results = [];
-        this.currentIndex = 0;
-        clearInterval(this.timer);
-        this.showStudentSelect();
-      };
+  this.currentVerbGroupKey = null;
+  this.verbs = [];
+  this.results = [];
+  this.currentIndex = 0;
+  if (this.timer) {
+    clearInterval(this.timer);
+    this.timer = null;
+  }
+  this.showStudentSelect();
+};
     }
   }
 
-  startGame(groupKey) {
-  // Полная очистка — убираем всё, включая старые обработчики
-  document.getElementById("mainContainer").innerHTML = '';
-
-  // Сброс состояния
+ startGame(groupKey) {
+  // === ПОЛНЫЙ СБРОС СОСТОЯНИЯ ===
   this.currentVerbGroupKey = groupKey;
   this.verbs = [...verbGroups[groupKey].verbs];
   this.results = [];
-  this.currentIndex = 0; // ← критически важно: до создания HTML!
+  this.currentIndex = 0; // ← критически важно: ДО создания HTML!
   this.gameStartTime = Date.now();
 
-  if (this.timer) clearInterval(this.timer);
-  this.timer = null;
+  // Останавливаем старый таймер, если есть
+  if (this.timer) {
+    clearInterval(this.timer);
+    this.timer = null;
+  }
 
-  // Создание новой разметки
-  document.getElementById("mainContainer").innerHTML = `
+  // Полностью очищаем контейнер — удаляем все старые элементы и обработчики
+  const container = document.getElementById("mainContainer");
+  container.innerHTML = '';
+
+  // Создаём новую разметку
+  container.innerHTML = `
     <h1>Hi, ${this.userData.nickname}!</h1>
     <div class="timer">Time left: <span id="timer">30</span> sec</div>
 
@@ -392,14 +399,20 @@ class VerbsTrainer {
     <p class="result" id="result"></p>
   `;
 
-  // Новые обработчики
-  document.getElementById("pastSimple").addEventListener("keydown", e => {
-    if (e.key === "Enter") document.getElementById("pastParticiple").focus();
-  });
-  document.getElementById("pastParticiple").addEventListener("keydown", e => {
-    if (e.key === "Enter") this.checkAnswer();
+  // Назначаем НОВЫЕ обработчики (старые уже удалены через innerHTML = '')
+  document.getElementById("pastSimple").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      document.getElementById("pastParticiple").focus();
+    }
   });
 
+  document.getElementById("pastParticiple").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      this.checkAnswer();
+    }
+  });
+
+  // Загружаем ПЕРВЫЙ глагол — только после полного сброса
   this.loadVerb();
 }
 
