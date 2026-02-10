@@ -1,7 +1,7 @@
 // Firebase уже инициализирован в index.html
 const database = window.database;
 
-// === СПИСОК УЧЕНИКОВ ===
+// === СПИСОК УЧЕНИКОВ (убраны лишние пробелы) ===
 const students = [
   { id: "alina", name: "Alina", avatar: "avatars/alina.png" },
   { id: "artem", name: "Artem", avatar: "avatars/artem.png" },
@@ -13,7 +13,7 @@ const students = [
   { id: "vika", name: "Vika", avatar: "avatars/vika.png" }
 ];
 
-// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132) ===
+// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132, без пробелов в конце) ===
 const verbs = [
   { base: "arise", past: "arose", participle: "arisen", ru: "возникать", image: "https://picsum.photos/200/150?random=1" },
   { base: "awake", past: "awoke", participle: "awoken", ru: "просыпаться", image: "https://picsum.photos/200/150?random=2" },
@@ -142,7 +142,6 @@ const verbs = [
   { base: "win", past: "won", participle: "won", ru: "выигрывать", image: "https://picsum.photos/200/150?random=125" },
   { base: "wind", past: "wound", participle: "wound", ru: "заводить (часы)", image: "https://picsum.photos/200/150?random=126" },
   { base: "write", past: "wrote", participle: "written", ru: "писать", image: "https://picsum.photos/200/150?random=127" },
-  // Дополнительные
   { base: "abide", past: "abode", participle: "abided", ru: "терпеть", image: "https://picsum.photos/200/150?random=128" },
   { base: "alight", past: "alit", participle: "alit", ru: "сходить", image: "https://picsum.photos/200/150?random=129" },
   { base: "beseech", past: "besought", participle: "besought", ru: "умолять", image: "https://picsum.photos/200/150?random=130" },
@@ -159,17 +158,17 @@ for (let i = 0; i < 5; i++) {
   commonParts[i] = commonVerbs.slice(i * 21, (i + 1) * 21);
 }
 const verbGroups = {
-  common1: { verbs: commonParts[0], name: "Common (part 1)" },
-  common2: { verbs: commonParts[1], name: "Common (part 2)" },
-  common3: { verbs: commonParts[2], name: "Common (part 3)" },
-  common4: { verbs: commonParts[3], name: "Common (part 4)" },
-  common5: { verbs: commonParts[4], name: "Common (part 5)" },
+  common1: { verbs: [...commonParts[0]], name: "Common (part 1)" },
+  common2: { verbs: [...commonParts[1]], name: "Common (part 2)" },
+  common3: { verbs: [...commonParts[2]], name: "Common (part 3)" },
+  common4: { verbs: [...commonParts[3]], name: "Common (part 4)" },
+  common5: { verbs: [...commonParts[4]], name: "Common (part 5)" },
   lessCommon: { verbs: verbs.filter(v => lessCommonList.includes(v.base)), name: "Less Common (15 verbs)" },
   advanced: { verbs: verbs.filter(v => advancedList.includes(v.base)), name: "Advanced (12 verbs)" },
-  all: { verbs: verbs, name: "All (132 verbs)" }
+  all: { verbs: [...verbs], name: "All (132 verbs)" }
 };
 
-// === СООБЩЕНИЯ ДЛЯ МОДАЛЬНЫХ ОКОН ===
+// === СООБЩЕНИЯ ===
 const allCorrectMessages = [
   "Wow, cool! Jump to the next training!",
   "Yay! The next training is calling you - go, go, go!",
@@ -203,6 +202,16 @@ const achievements = {
   master_advanced: { name: "Master Advanced", description: "100% correct in Advanced.", icon: "🏅" },
   ultimate_champion: { name: "Ultimate Champion", description: "100% correct in All verbs.", icon: "👑" },
 };
+
+// === ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: перемешать массив ===
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 // === ОСНОВНОЙ КЛАСС ===
 class VerbsTrainer {
@@ -289,7 +298,9 @@ class VerbsTrainer {
   }
 
   showMainScreen() {
-    // Сбрасываем состояние игры
+    // 🔥 Полная очистка контейнера — удаляем всё!
+    document.getElementById("mainContainer").innerHTML = '';
+
     this.currentVerbGroupKey = null;
     this.verbs = [];
     this.results = [];
@@ -339,25 +350,17 @@ class VerbsTrainer {
     };
 
     document.getElementById("backToStudentsBtn").onclick = () => {
-      this.currentVerbGroupKey = null;
-      this.verbs = [];
-      this.results = [];
-      this.currentIndex = 0;
-      if (this.timer) {
-        clearInterval(this.timer);
-        this.timer = null;
-      }
       this.showStudentSelect();
     };
   }
 
   startGame(groupKey) {
-    // Полная очистка контейнера — удаляем всё, включая старые обработчики
+    // 🔥 Полная очистка — гарантирует отсутствие "призраков"
     document.getElementById("mainContainer").innerHTML = '';
 
-    // Сброс состояния
     this.currentVerbGroupKey = groupKey;
-    this.verbs = [...verbGroups[groupKey].verbs];
+    // 💡 Перемешиваем глаголы каждый раз!
+    this.verbs = shuffleArray([...verbGroups[groupKey].verbs]);
     this.results = [];
     this.currentIndex = 0;
     this.gameStartTime = Date.now();
@@ -367,7 +370,6 @@ class VerbsTrainer {
       this.timer = null;
     }
 
-    // Создание новой разметки
     document.getElementById("mainContainer").innerHTML = `
       <h1>Hi, ${this.userData.nickname}!</h1>
       <div class="timer">Time left: <span id="timer">30</span> sec</div>
@@ -385,7 +387,6 @@ class VerbsTrainer {
       <p class="result" id="result"></p>
     `;
 
-    // Новые обработчики
     document.getElementById("pastSimple").addEventListener("keydown", e => {
       if (e.key === "Enter") document.getElementById("pastParticiple").focus();
     });
@@ -438,7 +439,7 @@ class VerbsTrainer {
   }
 
   checkAnswer() {
-    // 🔒 Защита: если индекс вне диапазона — ничего не делаем
+    // 🔒 Защита от вызова вне игры
     if (this.currentIndex < 0 || this.currentIndex >= this.verbs.length) {
       return;
     }
@@ -526,7 +527,6 @@ class VerbsTrainer {
     const minutes = Math.floor(timeTakenMs / 60000);
     const seconds = ((timeTakenMs % 60000) / 1000).toFixed(0);
     const formattedTime = `${minutes}m ${seconds < 10 ? '0' : ''}${seconds}s`;
-    const gameTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
     this.userData.totalGames = (this.userData.totalGames || 0) + 1;
     this.userData.totalCorrect = (this.userData.totalCorrect || 0) + correct;
@@ -536,7 +536,7 @@ class VerbsTrainer {
       total,
       percent,
       date: now.toLocaleDateString(),
-      gameTime: gameTime,
+      gameTime: now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
       time: formattedTime,
       group: verbGroups[this.currentVerbGroupKey].name
     });
