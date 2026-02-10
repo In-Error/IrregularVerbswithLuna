@@ -593,7 +593,6 @@ class VerbsTrainer {
           <thead>
             <tr>
               <th>Verb</th>
-              <th>Image</th>
               <th>Your Past</th>
               <th>Your Part.</th>
               <th>Correct Past</th>
@@ -619,7 +618,6 @@ class VerbsTrainer {
       html += `
         <tr>
           <td>${r.verb} <button class="play-table-audio-btn" data-word="${r.verb}"></button></td>
-          <td>${r.image ? `<img src="${r.image}" alt="${r.verb}" style="width: 50px; height: 40px; object-fit: cover; border-radius: 5px;" onerror="this.style.display='none'">` : ''}</td>
           <td class="${psClass}">${r.yourPs}</td>
           <td class="${ppClass}">${r.yourPp}</td>
           <td>${r.correctPs} ${correctPsButtons}</td>
