@@ -617,9 +617,9 @@ class VerbsTrainer {
       });
     });
 
-    document.getElementById("mainMenuBtn").addEventListener("click", () => {
-      this.showMainScreen();
-    });
+   document.getElementById("mainMenuBtn").addEventListener("click", () => {
+  location.reload(); // ← просто перезагрузить страницу
+});
 
     setTimeout(() => {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
