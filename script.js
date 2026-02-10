@@ -1,5 +1,3 @@
-[file name]: script (2).js
-[file content begin]
 // Firebase уже инициализирован в index.html
 const database = window.database;
 
