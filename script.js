@@ -1,7 +1,7 @@
 // Firebase уже инициализирован в index.html
 const database = window.database;
 
-// === СПИСОК УЧЕНИКОВ ===
+// === СПИСОК УЧЕНИКОВ (убраны лишние пробелы) ===
 const students = [
   { id: "alina", name: "Alina", avatar: "avatars/alina.png" },
   { id: "artem", name: "Artem", avatar: "avatars/artem.png" },
@@ -13,7 +13,7 @@ const students = [
   { id: "vika", name: "Vika", avatar: "avatars/vika.png" }
 ];
 
-// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132) ===
+// === ПОЛНЫЙ СПИСОК ГЛАГОЛОВ (132, без пробелов в конце) ===
 const verbs = [
   { base: "arise", past: "arose", participle: "arisen", ru: "возникать", image: "https://picsum.photos/200/150?random=1" },
   { base: "awake", past: "awoke", participle: "awoken", ru: "просыпаться", image: "https://picsum.photos/200/150?random=2" },
@@ -142,7 +142,6 @@ const verbs = [
   { base: "win", past: "won", participle: "won", ru: "выигрывать", image: "https://picsum.photos/200/150?random=125" },
   { base: "wind", past: "wound", participle: "wound", ru: "заводить (часы)", image: "https://picsum.photos/200/150?random=126" },
   { base: "write", past: "wrote", participle: "written", ru: "писать", image: "https://picsum.photos/200/150?random=127" },
-  // Дополнительные
   { base: "abide", past: "abode", participle: "abided", ru: "терпеть", image: "https://picsum.photos/200/150?random=128" },
   { base: "alight", past: "alit", participle: "alit", ru: "сходить", image: "https://picsum.photos/200/150?random=129" },
   { base: "beseech", past: "besought", participle: "besought", ru: "умолять", image: "https://picsum.photos/200/150?random=130" },
@@ -151,27 +150,25 @@ const verbs = [
 ];
 
 // === ФИЛЬТРЫ ===
-const lessCommonList = ["arise","awake","bear","bend","bet","bleed","breed","broadcast","deal","kneel","mow","overtake","sew","stink","strike"];
-const advancedList = ["bind","burst","cling","creep","grind","saw","shed","sow","spit","swell","weep","wind"];
-
+const lessCommonList = ["arise", "awake", "bear", "bend", "bet", "bleed", "breed", "broadcast", "deal", "kneel", "mow", "overtake", "sew", "stink", "strike"];
+const advancedList = ["bind", "burst", "cling", "creep", "grind", "saw", "shed", "sow", "spit", "swell", "weep", "wind"];
 const commonVerbs = verbs.filter(v => !lessCommonList.includes(v.base) && !advancedList.includes(v.base));
 const commonParts = [];
 for (let i = 0; i < 5; i++) {
   commonParts[i] = commonVerbs.slice(i * 21, (i + 1) * 21);
 }
-
 const verbGroups = {
-  common1: { verbs: commonParts[0], name: "Common (part 1)" },
-  common2: { verbs: commonParts[1], name: "Common (part 2)" },
-  common3: { verbs: commonParts[2], name: "Common (part 3)" },
-  common4: { verbs: commonParts[3], name: "Common (part 4)" },
-  common5: { verbs: commonParts[4], name: "Common (part 5)" },
+  common1: { verbs: [...commonParts[0]], name: "Common (part 1)" },
+  common2: { verbs: [...commonParts[1]], name: "Common (part 2)" },
+  common3: { verbs: [...commonParts[2]], name: "Common (part 3)" },
+  common4: { verbs: [...commonParts[3]], name: "Common (part 4)" },
+  common5: { verbs: [...commonParts[4]], name: "Common (part 5)" },
   lessCommon: { verbs: verbs.filter(v => lessCommonList.includes(v.base)), name: "Less Common (15 verbs)" },
   advanced: { verbs: verbs.filter(v => advancedList.includes(v.base)), name: "Advanced (12 verbs)" },
-  all: { verbs: verbs, name: "All (132 verbs)" }
+  all: { verbs: [...verbs], name: "All (132 verbs)" }
 };
 
-// === СООБЩЕНИЯ ДЛЯ МОДАЛЬНЫХ ОКОН ===
+// === СООБЩЕНИЯ ===
 const allCorrectMessages = [
   "Wow, cool! Jump to the next training!",
   "Yay! The next training is calling you - go, go, go!",
@@ -182,7 +179,6 @@ const allCorrectMessages = [
   "Good job! Next level - let’s go!",
   "Wow! The next training can’t wait for you!"
 ];
-
 const notAllCorrectMessages = [
   "Almost there! Next time you’ll be the champion!",
   "Good try! You’re getting better and better!",
@@ -207,6 +203,16 @@ const achievements = {
   ultimate_champion: { name: "Ultimate Champion", description: "100% correct in All verbs.", icon: "👑" },
 };
 
+// === ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ: перемешать массив ===
+function shuffleArray(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 // === ОСНОВНОЙ КЛАСС ===
 class VerbsTrainer {
   constructor() {
@@ -215,7 +221,7 @@ class VerbsTrainer {
     this.currentVerbGroupKey = null;
     this.verbs = [];
     this.currentIndex = 0;
-    this.timeLeft = 30; 
+    this.timeLeft = 30;
     this.timer = null;
     this.results = [];
     this.gameStartTime = null;
@@ -241,12 +247,10 @@ class VerbsTrainer {
     const container = document.getElementById("mainContainer");
     let html = `<h1>Выберите ученика</h1><div class="student-list">`;
     students.forEach(student => {
-      html += `
-        <div class="student-item" onclick="trainer.selectStudent('${student.id}')">
-          <img src="${student.avatar}" alt="${student.name}" class="student-avatar" onerror="this.src='https://via.placeholder.com/100'">
-          <div class="student-name">${student.name}</div>
-        </div>
-      `;
+      html += `<div class="student-item" onclick="trainer.selectStudent('${student.id}')">
+                 <img src="${student.avatar}" alt="${student.name}" class="student-avatar" onerror="this.src='https://via.placeholder.com/100'">
+                 <div class="student-name">${student.name}</div>
+               </div>`;
     });
     html += `</div>`;
     container.innerHTML = html;
@@ -255,7 +259,6 @@ class VerbsTrainer {
   async selectStudent(studentId) {
     const student = students.find(s => s.id === studentId);
     if (!student) return;
-
     this.currentStudentId = studentId;
     this.currentStudentName = student.name;
     this.currentStudentAvatar = student.avatar;
@@ -272,7 +275,7 @@ class VerbsTrainer {
       };
       this.showMainScreen();
     } catch (error) {
-      console.error("Error loading student ", error);
+      console.error("Error loading student", error);
       this.userData = {
         nickname: student.name,
         avatarUrl: student.avatar,
@@ -290,154 +293,130 @@ class VerbsTrainer {
     try {
       await database.ref('students/' + this.currentStudentId).set(this.userData);
     } catch (error) {
-      console.error("Error saving student ", error);
+      console.error("Error saving student", error);
     }
   }
 
   showMainScreen() {
-    // Сбрасываем состояние игры
+    // 🔥 Полная очистка контейнера — удаляем всё!
+    document.getElementById("mainContainer").innerHTML = '';
+
     this.currentVerbGroupKey = null;
     this.verbs = [];
     this.results = [];
     this.currentIndex = 0;
-    clearInterval(this.timer);
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
     this.timeLeft = 30;
 
     const lastVerbGroupKey = localStorage.getItem('lastVerbGroupKey') || 'common1';
     const container = document.getElementById("mainContainer");
-    
+
     container.innerHTML = `
       <div class="user-profile">
-        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" 
-             onerror="this.src='https://via.placeholder.com/100'">
+        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" onerror="this.src='https://via.placeholder.com/100'">
         <div class="user-info">
           <div class="user-nickname">${this.userData.nickname}</div>
           <div>Games: ${this.userData.totalGames || 0}</div>
           <div>Correct answers: ${this.userData.totalCorrect || 0}</div>
         </div>
       </div>
-      
+
       <h1>Irregular Verbs Trainer</h1>
-      
+
       <div class="form-group">
         <label for="verbGroup">Verb Group:</label>
         <select id="verbGroup">
-          ${Object.keys(verbGroups).map(key => 
+          ${Object.keys(verbGroups).map(key =>
             `<option value="${key}" ${key === lastVerbGroupKey ? 'selected' : ''}>
               ${verbGroups[key].name}
             </option>`
           ).join('')}
         </select>
       </div>
-      
+
       <button class="btn" id="startBtn">Start Game</button>
       <button class="btn" id="backToStudentsBtn" style="background: #f44336; margin-left: 10px;">Back to List</button>
-      
+
       ${this.getAchievementsHTML()}
     `;
 
-    // Используем простой onclick для надежности
-    const startBtn = document.getElementById("startBtn");
-    const backBtn = document.getElementById("backToStudentsBtn");
-    
-    if (startBtn) {
-      startBtn.onclick = () => {
-        const selectedGroup = document.getElementById("verbGroup").value;
-        localStorage.setItem('lastVerbGroupKey', selectedGroup);
-        this.startGame(selectedGroup);
-      };
-    }
-    
-    if (backBtn) {
-      backBtn.onclick = () => {
-        this.currentVerbGroupKey = null;
-        this.verbs = [];
-        this.results = [];
-        this.currentIndex = 0;
-        clearInterval(this.timer);
-        this.showStudentSelect();
-      };
-    }
+    document.getElementById("startBtn").onclick = () => {
+      const selectedGroup = document.getElementById("verbGroup").value;
+      localStorage.setItem('lastVerbGroupKey', selectedGroup);
+      this.startGame(selectedGroup);
+    };
+
+    document.getElementById("backToStudentsBtn").onclick = () => {
+      this.showStudentSelect();
+    };
   }
 
   startGame(groupKey) {
-  // Очистка предыдущих обработчиков
-  const pastSimple = document.getElementById("pastSimple");
-  const pastParticiple = document.getElementById("pastParticiple");
-  
-  if (pastSimple) pastSimple.replaceWith(pastSimple.cloneNode(true));
-  if (pastParticiple) pastParticiple.replaceWith(pastParticiple.cloneNode(true));
+    // 🔥 Полная очистка — гарантирует отсутствие "призраков"
+    document.getElementById("mainContainer").innerHTML = '';
 
-  // Сброс состояния
-  this.currentVerbGroupKey = groupKey;
-  this.verbs = [...verbGroups[groupKey].verbs];
-this.results = [];
-if (this.timer) clearInterval(this.timer);
-this.timer = null;
-this.currentIndex = 0;
-  this.gameStartTime = Date.now();
+    this.currentVerbGroupKey = groupKey;
+    // 💡 Перемешиваем глаголы каждый раз!
+    this.verbs = shuffleArray([...verbGroups[groupKey].verbs]);
+    this.results = [];
+    this.currentIndex = 0;
+    this.gameStartTime = Date.now();
 
-  document.getElementById("mainContainer").innerHTML = `
-    <div class="user-profile">
-      <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
-           onerror="this.src='https://via.placeholder.com/100'">
-      <div class="user-info">
-        <div class="user-nickname">${this.userData.nickname}</div>
-      </div>
-    </div>
-    
-    <h1>Hi, ${this.userData.nickname}!</h1>
-    <div class="timer">Time left: <span id="timer">30</span> sec</div>
-    
-    <div class="verb-container">
-      <div id="verbImageContainer"></div>
-      <div class="verb" id="verb"></div>
-    </div>
-    
-    <div class="translation" id="translation"></div>
-    <div class="inputs">
-      <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-      <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-    </div>
-    <p class="result" id="result"></p>
-  `;
-
-  // Новые обработчики
-  document.getElementById("pastSimple").addEventListener("keydown", e => {
-    if (e.key === "Enter") document.getElementById("pastParticiple").focus();
-  });
-  
-  document.getElementById("pastParticiple").addEventListener("keydown", e => {
-    if (e.key === "Enter") this.checkAnswer();
-  });
-
-  this.loadVerb();
-}
-
-  shuffleVerbs() {
-    for (let i = this.verbs.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.verbs[i], this.verbs[j]] = [this.verbs[j], this.verbs[i]];
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
     }
+
+    document.getElementById("mainContainer").innerHTML = `
+      <h1>Hi, ${this.userData.nickname}!</h1>
+      <div class="timer">Time left: <span id="timer">30</span> sec</div>
+
+      <div class="verb-container">
+        <div id="verbImageContainer"></div>
+        <div class="verb" id="verb"></div>
+      </div>
+
+      <div class="translation" id="translation"></div>
+      <div class="inputs">
+        <input type="text" class="input-box" id="pastSimple" placeholder="Past Simple" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <input type="text" class="input-box" id="pastParticiple" placeholder="Past Participle" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+      </div>
+      <p class="result" id="result"></p>
+    `;
+
+    document.getElementById("pastSimple").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("pastParticiple").focus();
+    });
+    document.getElementById("pastParticiple").addEventListener("keydown", e => {
+      if (e.key === "Enter") this.checkAnswer();
+    });
+
+    this.loadVerb();
   }
 
   loadVerb() {
     const currentVerb = this.verbs[this.currentIndex];
+    if (!currentVerb) {
+      this.showResults();
+      return;
+    }
+
     const verbElement = document.getElementById("verb");
     const translationElement = document.getElementById("translation");
     const imageContainer = document.getElementById("verbImageContainer");
-    
+
     verbElement.textContent = currentVerb.base.toUpperCase();
     translationElement.textContent = currentVerb.ru;
-    
+
     if (currentVerb.image) {
-      imageContainer.innerHTML = `<img src="${currentVerb.image}" alt="${currentVerb.base}" 
-                                    class="verb-image"
-                                    onerror="this.style.display='none'">`;
+      imageContainer.innerHTML = `<img src="${currentVerb.image}" alt="${currentVerb.base}" class="verb-image" onerror="this.style.display='none'">`;
     } else {
       imageContainer.innerHTML = '';
     }
-    
+
     document.getElementById("pastSimple").value = "";
     document.getElementById("pastParticiple").value = "";
     document.getElementById("result").textContent = "";
@@ -449,11 +428,9 @@ this.currentIndex = 0;
     clearInterval(this.timer);
     this.timeLeft = 30;
     document.getElementById("timer").textContent = this.timeLeft;
-    
     this.timer = setInterval(() => {
       this.timeLeft--;
       document.getElementById("timer").textContent = this.timeLeft;
-      
       if (this.timeLeft <= 0) {
         clearInterval(this.timer);
         this.showResults();
@@ -462,14 +439,14 @@ this.currentIndex = 0;
   }
 
   checkAnswer() {
+    // 🔒 Защита от вызова вне игры
+    if (this.currentIndex < 0 || this.currentIndex >= this.verbs.length) {
+      return;
+    }
+
     const psInput = document.getElementById("pastSimple").value.trim().toLowerCase();
     const ppInput = document.getElementById("pastParticiple").value.trim().toLowerCase();
     const currentVerb = this.verbs[this.currentIndex];
-
-    if (!currentVerb) {
-      this.showResults();
-      return;
-    }
 
     const isPsCorrect = this.checkForm(psInput, currentVerb.past);
     const isPpCorrect = this.checkForm(ppInput, currentVerb.participle);
@@ -483,11 +460,7 @@ this.currentIndex = 0;
         this.loadVerb();
       } else {
         const correctAnswers = this.results.filter(r => r.correct).length;
-        if (correctAnswers === this.verbs.length) {
-          this.showCompletionModal(true, true);
-        } else {
-          this.showCompletionModal(false, true);
-        }
+        this.showCompletionModal(correctAnswers === this.verbs.length, true);
       }
     } else {
       this.showCompletionModal(false, true);
@@ -551,21 +524,19 @@ this.currentIndex = 0;
     const now = new Date();
     const gameEndTime = Date.now();
     const timeTakenMs = gameEndTime - this.gameStartTime;
-    
     const minutes = Math.floor(timeTakenMs / 60000);
     const seconds = ((timeTakenMs % 60000) / 1000).toFixed(0);
     const formattedTime = `${minutes}m ${seconds < 10 ? '0' : ''}${seconds}s`;
-    const gameTime = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
 
     this.userData.totalGames = (this.userData.totalGames || 0) + 1;
     this.userData.totalCorrect = (this.userData.totalCorrect || 0) + correct;
-    
+
     this.userData.records.push({
       correct,
       total,
       percent,
       date: now.toLocaleDateString(),
-      gameTime: gameTime,
+      gameTime: now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
       time: formattedTime,
       group: verbGroups[this.currentVerbGroupKey].name
     });
@@ -575,18 +546,17 @@ this.currentIndex = 0;
 
     let html = `
       <div class="user-profile">
-        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar"
-             onerror="this.src='https://via.placeholder.com/100'">
+        <img src="${this.userData.avatarUrl}" alt="Avatar" class="user-avatar" onerror="this.src='https://via.placeholder.com/100'">
         <div class="user-info">
           <div class="user-nickname">${this.userData.nickname}</div>
         </div>
       </div>
-      
+
       <h1 class="results-header">Results</h1>
       <div class="stats">
         <p class="player-name">Player: ${this.userData.nickname}</p>
         <p class="answered-count">You answered: ${this.results.length} verbs</p>
-        <p class="correct-answers">Correct answers: <span class="correct-number">${correct}</span>/<span class="total-number">${total}</span></p>
+        <p class="correct-answers">Correct answers: <span class="correct-number">${correct}</span> / <span class="total-number">${total}</span></p>
         <p class="success-rate">Success rate: ${percent}%</p>
         <p>Time Taken: ${formattedTime}</p>
       </div>
@@ -608,12 +578,12 @@ this.currentIndex = 0;
     this.results.forEach(r => {
       const psClass = this.checkForm(r.yourPs.toLowerCase(), r.correctPs) ? 'correct' : 'wrong';
       const ppClass = this.checkForm(r.yourPp.toLowerCase(), r.correctPp) ? 'correct' : 'wrong';
-      
-      const correctPsButtons = r.correctPs.split(' ').map(part => 
+
+      const correctPsButtons = r.correctPs.split(' ').map(part =>
         `<button class="play-table-audio-btn" data-word="${part}"></button>`
       ).join('');
-      
-      const correctPpButtons = r.correctPp.split(' ').map(part => 
+
+      const correctPpButtons = r.correctPp.split(' ').map(part =>
         `<button class="play-table-audio-btn" data-word="${part}"></button>`
       ).join('');
 
@@ -634,12 +604,11 @@ this.currentIndex = 0;
         </table>
       </div>
       <button class="restart-btn" id="mainMenuBtn">Main Menu</button>
-      
       ${this.getAchievementsHTML()}
     `;
 
     document.getElementById("mainContainer").innerHTML = html;
-    
+
     document.querySelectorAll('.play-table-audio-btn').forEach(button => {
       button.addEventListener('click', (event) => {
         const wordToSpeak = event.target.dataset.word;
@@ -658,26 +627,17 @@ this.currentIndex = 0;
 
   getAchievementsHTML() {
     const playerAchievements = this.userData ? (this.userData.achievements || {}) : {};
-    let html = `
-      <div class="achievements">
-        <div class="achievements-title">My Achievements</div>
-        <div class="achievement-list">
-    `;
+    let html = `<div class="achievements"><div class="achievements-title">My Achievements</div><div class="achievement-list">`;
     for (const key in achievements) {
       const achievement = achievements[key];
       const isUnlocked = playerAchievements[key];
-      html += `
-        <div class="achievement-item ${isUnlocked ? 'unlocked' : ''}">
-          <span class="achievement-icon">${achievement.icon}</span>
-          <div class="achievement-name">${achievement.name}</div>
-          <div class="achievement-description">${achievement.description}</div>
-        </div>
-      `;
+      html += `<div class="achievement-item ${isUnlocked ? 'unlocked' : ''}">
+                 <span class="achievement-icon">${achievement.icon}</span>
+                 <div class="achievement-name">${achievement.name}</div>
+                 <div class="achievement-description">${achievement.description}</div>
+               </div>`;
     }
-    html += `
-        </div>
-      </div>
-    `;
+    html += `</div></div>`;
     return html;
   }
 
