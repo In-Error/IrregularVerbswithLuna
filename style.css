@@ -793,6 +793,7 @@ input:focus, select:focus {
 /* Убираем курсив у русского перевода на мобильных */
 @media (max-width: 600px) {
   .translation {
-    font-style: normal;
+    font-style: normal !important;
+    font-family: 'Fredoka', sans-serif !important;
   }
 }
